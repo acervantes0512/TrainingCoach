@@ -1,0 +1,192 @@
+<div class="weekly-page">
+  <header class="week-header">
+    <button class="nav-btn" (click)="prevWeek()">‹</button>
+    <h2 class="week-title">Semana del {{ weekStart() }}</h2>
+    <button class="nav-btn" (click)="nextWeek()">›</button>
+  </header>
+
+  @if (progress()) {
+    <div class="status-banner" [class]="getStatusClass(progress()!.status)">
+      <span class="status-label">{{ getStatusLabel(progress()!.status) }}</span>
+      <div class="status-stats">
+        <div class="stat"><span class="stat-val">{{ progress()!.rate_cm_per_week ?? '—' }}</span><span class="stat-lbl">cm/sem ritmo</span></div>
+        <div class="stat"><span class="stat-val">{{ progress()!.needed_rate_cm_per_week }}</span><span class="stat-lbl">cm/sem necesario</span></div>
+        <div class="stat"><span class="stat-val">{{ progress()!.remaining_cm }}</span><span class="stat-lbl">cm restantes</span></div>
+        <div class="stat"><span class="stat-val">{{ progress()!.weeks_remaining }}</span><span class="stat-lbl">semanas restantes</span></div>
+      </div>
+    </div>
+  }
+
+  <div class="charts-grid-main">
+    <section class="card chart-card chart-wide">
+      <h3 class="card-title">Cintura vs Meta</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="waistChartData()" [options]="waistChartOptions"></canvas></div>
+    </section>
+    <section class="card chart-card">
+      <h3 class="card-title">Circunferencia de Brazos</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="armsChartData()" [options]="armsChartOptions"></canvas></div>
+    </section>
+    <section class="card chart-card">
+      <h3 class="card-title">Tendencia de Peso</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="weightChartData()" [options]="weightChartOptions"></canvas></div>
+    </section>
+    <section class="card chart-card chart-wide">
+      <h3 class="card-title">Nutrición Diaria</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'bar'" [data]="nutritionChartData()" [options]="nutritionChartOptions"></canvas></div>
+    </section>
+  </div>
+
+  @if (summary()?.measurement_avg) {
+    <section class="card averages-card">
+      <h3 class="card-title">Promedios Semanales</h3>
+      <div class="averages-grid">
+        <div class="avg-item">
+          <span class="avg-label">Cintura</span>
+          <span class="avg-value">{{ summary()!.measurement_avg!.waist_cm }} cm</span>
+          @if (summary()!.deltas) {
+            <span class="avg-delta" [class.positive]="summary()!.deltas!.waist_cm < 0">{{ summary()!.deltas!.waist_cm > 0 ? '+' : '' }}{{ summary()!.deltas!.waist_cm }}</span>
+          }
+        </div>
+        <div class="avg-item">
+          <span class="avg-label">Brazo D</span>
+          <span class="avg-value">{{ summary()!.measurement_avg!.arm_right_cm }} cm</span>
+          @if (summary()!.deltas) {
+            <span class="avg-delta">{{ summary()!.deltas!.arm_right_cm > 0 ? '+' : '' }}{{ summary()!.deltas!.arm_right_cm }}</span>
+          }
+        </div>
+        <div class="avg-item">
+          <span class="avg-label">Brazo I</span>
+          <span class="avg-value">{{ summary()!.measurement_avg!.arm_left_cm }} cm</span>
+          @if (summary()!.deltas) {
+            <span class="avg-delta">{{ summary()!.deltas!.arm_left_cm > 0 ? '+' : '' }}{{ summary()!.deltas!.arm_left_cm }}</span>
+          }
+        </div>
+        <div class="avg-item">
+          <span class="avg-label">Peso</span>
+          <span class="avg-value">{{ summary()!.measurement_avg!.weight_kg }} kg</span>
+          @if (summary()!.deltas) {
+            <span class="avg-delta" [class.positive]="summary()!.deltas!.weight_kg < 0">{{ summary()!.deltas!.weight_kg > 0 ? '+' : '' }}{{ summary()!.deltas!.weight_kg }}</span>
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+  <!-- NEW: Insights Grid -->
+  <div class="insights-grid">
+    <!-- Progress Ring -->
+    <div class="card insight-card progress-ring-card">
+      <h4>Progreso hacia 94cm</h4>
+      <div class="progress-ring">
+        <svg viewBox="0 0 120 120">
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-border)" stroke-width="10"/>
+          <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-primary)" stroke-width="10"
+                  stroke-dasharray="314" [attr.stroke-dashoffset]="314 - (314 * progressPercent() / 100)"
+                  stroke-linecap="round" transform="rotate(-90 60 60)"/>
+        </svg>
+        <span class="ring-percent">{{ progressPercent() }}%</span>
+      </div>
+      <span class="ring-sub">{{ progress()?.remaining_cm }} cm restantes</span>
+    </div>
+
+    <!-- Deficit Efficiency -->
+    @if (deficitEfficiency()) {
+      <div class="card insight-card">
+        <h4>Eficiencia del Déficit</h4>
+        <div class="de-main">
+          <span class="de-ratio" [class]="deficitEfficiency()!.rating">
+            {{ deficitEfficiency()!.ratio !== null ? deficitEfficiency()!.ratio : '—' }}
+          </span>
+          <span class="de-unit">cm/kg</span>
+        </div>
+        <div class="de-details">
+          <span>Cintura: -{{ deficitEfficiency()!.waist_lost_cm }} cm</span>
+          <span>Peso: -{{ deficitEfficiency()!.weight_lost_kg }} kg</span>
+        </div>
+        <p class="de-hint">&gt; 0.8 = excelente (pérdida visceral)</p>
+      </div>
+    }
+
+    <!-- WHtR -->
+    @if (whtr()) {
+      <div class="card insight-card">
+        <h4>Cintura/Estatura (WHtR)</h4>
+        <div class="whtr-main">
+          <span class="whtr-value">{{ whtr()!.ratio }}</span>
+        </div>
+        <span class="whtr-cat">{{ getWhtrLabel(whtr()!.category) }}</span>
+        <p class="whtr-hint">Meta: &lt; 0.50</p>
+      </div>
+    }
+
+    <!-- Milestones -->
+    <div class="card insight-card milestones-card">
+      <h4>Hitos de Cintura</h4>
+      <div class="milestones-list">
+        @for (m of milestones(); track m.value) {
+          <div class="milestone-item" [class.reached]="m.reached">
+            <span class="ms-icon">{{ m.reached ? '🏆' : '⚪' }}</span>
+            <span class="ms-value">&lt; {{ m.value }} cm</span>
+            @if (m.date_reached) {
+              <span class="ms-date">{{ m.date_reached }}</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Adherence Calendar -->
+  @if (adherence().length > 0) {
+    <section class="card adherence-card">
+      <h3 class="card-title">Calendario de Adherencia (últimas 4 semanas)</h3>
+      <div class="adherence-grid">
+        @for (day of adherence(); track day.date) {
+          <div class="adh-cell" [class]="'adh-' + day.status" [title]="day.date"></div>
+        }
+      </div>
+      <div class="adh-legend">
+        <span><span class="adh-dot adh-green"></span>Cumplido</span>
+        <span><span class="adh-dot adh-yellow"></span>Parcial</span>
+        <span><span class="adh-dot adh-red"></span>No cumplido</span>
+        <span><span class="adh-dot adh-none"></span>Sin datos</span>
+      </div>
+    </section>
+  }
+
+  <!-- Weekly Report Card -->
+  @if (reportCard()) {
+    <section class="card report-card-section">
+      <h3 class="card-title">Reporte Semanal</h3>
+      <div class="rc-overall">
+        <span class="rc-grade" [style.color]="getGradeColor(reportCard()!.overall_grade)">{{ reportCard()!.overall_grade }}</span>
+        <span class="rc-message">{{ reportCard()!.message }}</span>
+      </div>
+      <div class="rc-grid">
+        <div class="rc-item">
+          <span class="rc-item-label">Proteína</span>
+          <span class="rc-item-grade" [style.color]="getGradeColor(reportCard()!.protein_grade)">{{ reportCard()!.protein_grade }}</span>
+          <span class="rc-item-detail">{{ reportCard()!.protein_days_hit }}/5 días</span>
+        </div>
+        <div class="rc-item">
+          <span class="rc-item-label">Calorías</span>
+          <span class="rc-item-grade" [style.color]="getGradeColor(reportCard()!.calories_grade)">{{ reportCard()!.calories_grade }}</span>
+          <span class="rc-item-detail">{{ reportCard()!.calories_days_hit }}/5 días</span>
+        </div>
+        <div class="rc-item">
+          <span class="rc-item-label">Mediciones</span>
+          <span class="rc-item-grade" [style.color]="getGradeColor(reportCard()!.measurements_grade)">{{ reportCard()!.measurements_grade }}</span>
+          <span class="rc-item-detail">{{ reportCard()!.measurements_days }}/5 días</span>
+        </div>
+        <div class="rc-item">
+          <span class="rc-item-label">Ritmo Cintura</span>
+          <span class="rc-item-grade" [style.color]="getGradeColor(reportCard()!.waist_rate_grade)">{{ reportCard()!.waist_rate_grade }}</span>
+        </div>
+        <div class="rc-item">
+          <span class="rc-item-label">Brazos</span>
+          <span class="rc-item-grade" [style.color]="getGradeColor(reportCard()!.arms_preservation_grade)">{{ reportCard()!.arms_preservation_grade }}</span>
+        </div>
+      </div>
+    </section>
+  }
+</div>

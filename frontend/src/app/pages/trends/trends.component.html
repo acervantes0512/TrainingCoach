@@ -1,0 +1,30 @@
+<div class="trends-page">
+  <h2 class="page-title">Tendencias Nutricionales</h2>
+
+  @if (proteinAlert()) {
+    <div class="alert alert-danger">
+      ⚠️ <strong>Proteína por debajo del piso de 140g.</strong> Este es el mínimo diario no negociable — no se compensa entre días.
+    </div>
+  }
+
+  <section class="card">
+    <h3 class="card-title">Promedios Semanales vs. Metas</h3>
+    @for (macro of weeklyNutrition(); track macro.label) {
+      <app-macro-bar [macro]="macro" />
+    }
+    @if (!weeklyNutrition().length) {
+      <p class="empty-state">Sin datos de nutrición esta semana</p>
+    }
+  </section>
+
+  <section class="card chart-section">
+    <h3 class="card-title">Consumo Diario de Proteína</h3>
+    <div class="chart-container">
+      <canvas baseChart [type]="'line'" [data]="proteinChartData()" [options]="proteinChartOptions"></canvas>
+    </div>
+    <div class="chart-legend">
+      <span class="legend-line legend-floor"></span>
+      <span class="legend-text">Piso: 140g (no negociable)</span>
+    </div>
+  </section>
+</div>

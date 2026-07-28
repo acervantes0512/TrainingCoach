@@ -1,0 +1,9 @@
+<div class="macro-bar" [class]="macro().status">
+  <div class="macro-header">
+    <span class="macro-label">{{ macro().label }}</span>
+    <span class="macro-value">{{ macro().current }} <span class="macro-range">/ {{ macro().min }}–{{ macro().max }}</span></span>
+  </div>
+  <div class="bar-track">
+    <div class="bar-fill" [style.width.%]="fillPercent()"></div>
+  </div>
+</div>

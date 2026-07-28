@@ -1,0 +1,52 @@
+.macro-bar {
+  margin-bottom: 1rem;
+
+  .macro-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.375rem;
+  }
+
+  .macro-label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--color-text);
+  }
+
+  .macro-value {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .macro-range {
+    font-weight: 400;
+    color: var(--color-text-secondary);
+  }
+
+  .bar-track {
+    height: 10px;
+    background: var(--color-border);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    transition: width 0.4s ease;
+  }
+
+  &.green .bar-fill {
+    background: var(--color-success);
+  }
+
+  &.amber .bar-fill {
+    background: var(--color-warning);
+  }
+
+  &.red .bar-fill {
+    background: var(--color-danger);
+  }
+}

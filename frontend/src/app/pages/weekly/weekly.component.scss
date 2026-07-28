@@ -1,0 +1,136 @@
+.weekly-page { display: flex; flex-direction: column; gap: 1rem; }
+
+.week-header {
+  display: flex; align-items: center; justify-content: center; gap: 1.25rem;
+  .nav-btn {
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 1px solid var(--color-border); background: var(--color-surface);
+    font-size: 1.25rem; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    &:hover { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+  }
+  .week-title { font-size: 1rem; font-weight: 600; margin: 0; }
+}
+
+.status-banner {
+  padding: 0.875rem 1.25rem; border-radius: var(--radius);
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+  &.status-green { background: rgba(16,185,129,0.08); border: 1px solid var(--color-success); }
+  &.status-amber { background: rgba(245,158,11,0.08); border: 1px solid var(--color-warning); }
+  &.status-red { background: rgba(239,68,68,0.08); border: 1px solid var(--color-danger); }
+  .status-label { font-weight: 700; font-size: 1rem; }
+  .status-stats { display: flex; gap: 1.5rem; }
+  .stat { text-align: center; }
+  .stat-val { display: block; font-weight: 700; font-size: 1rem; }
+  .stat-lbl { font-size: 0.65rem; color: var(--color-text-secondary); text-transform: uppercase; }
+}
+
+.charts-grid-main {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  .chart-wide { grid-column: span 2; }
+  @media (max-width: 900px) { grid-template-columns: 1fr; .chart-wide { grid-column: span 1; } }
+}
+
+.chart-card { .chart-wrap { height: 220px; position: relative; } }
+
+.averages-card { margin-top: 0.5rem; }
+.averages-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem;
+  @media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
+}
+.avg-item {
+  text-align: center; padding: 0.75rem; border-radius: var(--radius-sm); background: var(--color-bg);
+  .avg-label { display: block; font-size: 0.65rem; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+  .avg-value { display: block; font-size: 1.1rem; font-weight: 700; margin: 0.125rem 0; }
+  .avg-delta { display: block; font-size: 0.75rem; color: var(--color-text-secondary); }
+  .avg-delta.positive { color: var(--color-success); }
+}
+
+.insights-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
+  @media (max-width: 900px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 600px) { grid-template-columns: 1fr; }
+}
+
+.insight-card {
+  padding: 1rem; text-align: center;
+  h4 { margin: 0 0 0.5rem; font-size: 0.75rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; }
+}
+
+.progress-ring-card {
+  .progress-ring { position: relative; width: 100px; height: 100px; margin: 0 auto; }
+  svg { width: 100%; height: 100%; }
+  .ring-percent {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 1.25rem; font-weight: 800; color: var(--color-primary);
+  }
+  .ring-sub { font-size: 0.7rem; color: var(--color-text-secondary); margin-top: 0.25rem; display: block; }
+}
+
+.de-main {
+  margin: 0.5rem 0;
+  .de-ratio { font-size: 1.75rem; font-weight: 800;
+    &.excellent { color: var(--color-success); }
+    &.normal { color: var(--color-warning); }
+    &.warning { color: var(--color-danger); }
+  }
+  .de-unit { font-size: 0.7rem; color: var(--color-text-secondary); margin-left: 4px; }
+}
+.de-details { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.7rem; color: var(--color-text-secondary); }
+.de-hint { font-size: 0.65rem; color: var(--color-text-secondary); margin: 0.5rem 0 0; }
+
+.whtr-main { margin: 0.5rem 0; }
+.whtr-value { font-size: 1.75rem; font-weight: 800; color: var(--color-primary); }
+.whtr-cat { font-size: 0.8rem; display: block; margin-top: 0.25rem; }
+.whtr-hint { font-size: 0.65rem; color: var(--color-text-secondary); margin: 0.5rem 0 0; }
+
+.milestones-card {
+  .milestones-list { display: flex; flex-direction: column; gap: 0.3rem; text-align: left; }
+  .milestone-item {
+    display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; padding: 0.2rem 0;
+    &.reached { font-weight: 600; color: var(--color-success); }
+    .ms-icon { font-size: 0.9rem; }
+    .ms-value { flex: 1; }
+    .ms-date { font-size: 0.65rem; color: var(--color-text-secondary); }
+  }
+}
+
+.adherence-card {
+  .adherence-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px;
+    max-width: 350px; margin: 0.5rem auto;
+  }
+  .adh-cell {
+    aspect-ratio: 1; border-radius: 3px;
+    &.adh-green { background: var(--color-success); }
+    &.adh-yellow { background: var(--color-warning); }
+    &.adh-red { background: var(--color-danger); }
+    &.adh-none { background: var(--color-border); }
+  }
+  .adh-legend {
+    display: flex; justify-content: center; gap: 1rem; margin-top: 0.5rem; font-size: 0.65rem; color: var(--color-text-secondary);
+    .adh-dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle;
+      &.adh-green { background: var(--color-success); }
+      &.adh-yellow { background: var(--color-warning); }
+      &.adh-red { background: var(--color-danger); }
+      &.adh-none { background: var(--color-border); }
+    }
+  }
+}
+
+.report-card-section {
+  .rc-overall {
+    display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;
+    .rc-grade { font-size: 2.5rem; font-weight: 900; }
+    .rc-message { font-size: 0.85rem; color: var(--color-text-secondary); }
+  }
+  .rc-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem;
+    @media (max-width: 600px) { grid-template-columns: repeat(3, 1fr); }
+  }
+  .rc-item {
+    text-align: center; padding: 0.5rem; border-radius: var(--radius-sm); background: var(--color-bg);
+    .rc-item-label { display: block; font-size: 0.6rem; color: var(--color-text-secondary); text-transform: uppercase; }
+    .rc-item-grade { display: block; font-size: 1.25rem; font-weight: 800; margin: 0.15rem 0; }
+    .rc-item-detail { display: block; font-size: 0.6rem; color: var(--color-text-secondary); }
+  }
+}

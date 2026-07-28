@@ -1,0 +1,160 @@
+<div class="daily-page">
+  <header class="day-header">
+    <button class="nav-btn" (click)="prevDay()">‹</button>
+    <h2 class="date-title">{{ displayDate() }}</h2>
+    <button class="nav-btn" (click)="nextDay()">›</button>
+  </header>
+
+  <!-- Training Day Banner -->
+  @if (trainingDay()) {
+    <div class="training-banner">
+      <span class="training-emoji">{{ trainingDay()!.emoji }}</span>
+      <span class="training-label">{{ trainingDay()!.label }}</span>
+    </div>
+  }
+
+  <!-- Protein Streak + Supplements Row -->
+  <div class="insights-row">
+    @if (proteinStreak(); as streak) {
+      <div class="card mini-card streak-card">
+        <div class="streak-flame">🔥</div>
+        <div class="streak-info">
+          <span class="streak-number">{{ streak.current_streak }}</span>
+          <span class="streak-label">días con ≥{{ streak.floor }}g proteína</span>
+        </div>
+        <div class="streak-best">Récord: {{ streak.longest_streak }}</div>
+      </div>
+    }
+
+    <div class="card mini-card supplements-card">
+      <h4>Suplementos</h4>
+      <div class="supplement-checks">
+        <label class="supp-item" [class.done]="supplements()?.creatine" (click)="toggleSupplement('creatine')">
+          <span class="supp-check">{{ supplements()?.creatine ? '✅' : '⬜' }}</span>
+          Creatina 5g
+        </label>
+        <label class="supp-item" [class.done]="supplements()?.protein_powder" (click)="toggleSupplement('protein_powder')">
+          <span class="supp-check">{{ supplements()?.protein_powder ? '✅' : '⬜' }}</span>
+          Proteína en polvo
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="top-grid">
+    <section class="card macros-card">
+      <h3 class="card-title">Macros del día</h3>
+      @for (macro of summary()?.macros; track macro.label) {
+        <app-macro-bar [macro]="macro" />
+      }
+      @if (!summary()?.macros?.length) {
+        <p class="empty-hint">Registra comidas para ver tu progreso</p>
+      }
+    </section>
+
+    <section class="card measurements-card">
+      <h3 class="card-title">Medidas Corporales</h3>
+      @if (summary()?.measurement) {
+        <div class="measurement-grid">
+          <div class="m-item"><span class="m-label">Cintura</span><span class="m-val">{{ summary()!.measurement!.waist_cm }}<small>cm</small></span></div>
+          <div class="m-item"><span class="m-label">Brazo D</span><span class="m-val">{{ summary()!.measurement!.arm_right_cm }}<small>cm</small></span></div>
+          <div class="m-item"><span class="m-label">Brazo I</span><span class="m-val">{{ summary()!.measurement!.arm_left_cm }}<small>cm</small></span></div>
+          <div class="m-item"><span class="m-label">Peso</span><span class="m-val">{{ summary()!.measurement!.weight_kg }}<small>kg</small></span></div>
+        </div>
+      } @else {
+        <form class="measurement-form" (ngSubmit)="saveMeasurement()">
+          <div class="m-form-grid">
+            <div class="form-row"><label>Cintura</label><input type="number" step="0.1" [(ngModel)]="measurementForm.waist_cm" name="waist" placeholder="cm"></div>
+            <div class="form-row"><label>Brazo D</label><input type="number" step="0.1" [(ngModel)]="measurementForm.arm_right_cm" name="armR" placeholder="cm"></div>
+            <div class="form-row"><label>Brazo I</label><input type="number" step="0.1" [(ngModel)]="measurementForm.arm_left_cm" name="armL" placeholder="cm"></div>
+            <div class="form-row"><label>Peso</label><input type="number" step="0.1" [(ngModel)]="measurementForm.weight_kg" name="weight" placeholder="kg"></div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm">Guardar Medidas</button>
+        </form>
+      }
+    </section>
+  </div>
+
+  <section class="meals-section">
+    <div class="meals-toolbar">
+      <h3 class="card-title" style="margin:0">Comidas ({{ summary()?.meals?.length || 0 }})</h3>
+      <div class="toolbar-right">
+        <span class="meals-total" *ngIf="summary()?.totals as t">{{ t.calories | number:'1.0-0' }} kcal · {{ t.protein_g | number:'1.0-0' }}g P</span>
+        <button class="btn btn-primary btn-sm" (click)="showMealForm.set(!showMealForm())">
+          {{ showMealForm() ? '✕ Cancelar' : '+ Agregar' }}
+        </button>
+      </div>
+    </div>
+
+    @if (showMealForm()) {
+      <form class="card meal-form-card" (ngSubmit)="saveMeal()">
+        <div class="mf-top">
+          <div class="form-row"><label>Tipo</label>
+            <select [(ngModel)]="mealForm.meal_type" name="mealType">
+              <option value="breakfast">🥣 Desayuno</option>
+              <option value="lunch">🥗 Almuerzo</option>
+              <option value="dinner">🍽️ Cena</option>
+              <option value="snack">🍎 Snack</option>
+              <option value="shake">🥤 Batido</option>
+            </select>
+          </div>
+          <div class="form-row" style="flex:1"><label>Descripción</label>
+            <input type="text" [(ngModel)]="mealForm.description" name="desc" placeholder="¿Qué comiste?">
+          </div>
+        </div>
+        <div class="mf-macros">
+          <div class="form-row"><label>Kcal</label><input type="number" [(ngModel)]="mealForm.calories" name="cal"></div>
+          <div class="form-row"><label>Proteína (g)</label><input type="number" [(ngModel)]="mealForm.protein_g" name="prot"></div>
+          <div class="form-row"><label>Carbos (g)</label><input type="number" [(ngModel)]="mealForm.carbs_g" name="carbs"></div>
+          <div class="form-row"><label>Grasa (g)</label><input type="number" [(ngModel)]="mealForm.fat_g" name="fat"></div>
+          <button type="submit" class="btn btn-primary">Guardar</button>
+        </div>
+      </form>
+    }
+
+    <div class="meals-list">
+      @for (meal of summary()?.meals; track meal.id) {
+        <div class="meal-row">
+          <div class="meal-type-badge" [attr.data-type]="meal.meal_type">{{ getMealIcon(meal.meal_type) }}</div>
+          <div class="meal-info">
+            <span class="meal-desc">{{ meal.description }}</span>
+            <span class="meal-type-label">{{ getMealLabel(meal.meal_type) }}</span>
+          </div>
+          <div class="meal-macros-grid">
+            <div class="mm-item"><span class="mm-val">{{ meal.calories }}</span><span class="mm-unit">kcal</span></div>
+            <div class="mm-item mm-protein"><span class="mm-val">{{ meal.protein_g }}</span><span class="mm-unit">P</span></div>
+            <div class="mm-item"><span class="mm-val">{{ meal.carbs_g }}</span><span class="mm-unit">C</span></div>
+            <div class="mm-item"><span class="mm-val">{{ meal.fat_g }}</span><span class="mm-unit">G</span></div>
+          </div>
+          <button class="btn-delete" (click)="deleteMeal(meal.id)">✕</button>
+        </div>
+      }
+      @if (!summary()?.meals?.length && !showMealForm()) {
+        <div class="empty-meals">
+          <span class="empty-icon">🍽️</span>
+          <p>Sin comidas registradas hoy</p>
+          <button class="btn btn-secondary btn-sm" (click)="showMealForm.set(true)">Registra tu primera comida</button>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- Protein Distribution -->
+  @if (proteinDistribution().length > 0) {
+    <section class="card protein-dist-card">
+      <h3 class="card-title">Distribución de Proteína</h3>
+      <div class="prot-bars">
+        @for (item of proteinDistribution(); track item.meal_type) {
+          <div class="prot-bar-row">
+            <span class="prot-bar-label">{{ item.label }}</span>
+            <div class="prot-bar-track">
+              <div class="prot-bar-fill" [class.optimal]="item.optimal" [class.low]="item.protein_g < 25" [style.width.%]="(item.protein_g / 55) * 100 | number:'1.0-0'"></div>
+            </div>
+            <span class="prot-bar-value" [class.optimal]="item.optimal">{{ item.protein_g }}g</span>
+          </div>
+        }
+      </div>
+      <p class="prot-hint">Óptimo: 25-55g por comida</p>
+    </section>
+  }
+</div>
