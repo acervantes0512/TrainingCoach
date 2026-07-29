@@ -6,6 +6,7 @@ import * as SettingsService from '../services/settings.service.js';
 import * as SummaryService from '../services/summary.service.js';
 import * as InsightsService from '../services/insights.service.js';
 import * as SupplementService from '../services/supplement.service.js';
+import * as GoalService from '../services/goal.service.js';
 
 export function createMcpServer(): McpServer {
   const server = new McpServer({
@@ -260,6 +261,61 @@ export function createMcpServer(): McpServer {
     async ({ date, supplement_type, taken }) => {
       const status = await SupplementService.toggle(date, supplement_type, taken);
       return { content: [{ type: 'text' as const, text: JSON.stringify(status) }] };
+    }
+  );
+
+  server.tool(
+    'get_goals',
+    'Get all active fitness goals. Goals can track any metric: waist_cm, weight_kg, arm_right_cm, arm_left_cm. Each has direction (decrease/increase/maintain), target value, baseline, and dates.',
+    {},
+    async () => {
+      const goals = await GoalService.getActive();
+      return { content: [{ type: 'text' as const, text: JSON.stringify(goals) }] };
+    }
+  );
+
+  server.tool(
+    'get_goals_progress',
+    'Get progress for all active goals. Returns current value, % complete, ideal value for today, difference from ideal line, and whether on track. Includes history with actual vs ideal for charting.',
+    {},
+    async () => {
+      const progress = await GoalService.getAllProgress();
+      return { content: [{ type: 'text' as const, text: JSON.stringify(progress) }] };
+    }
+  );
+
+  server.tool(
+    'create_goal',
+    'Create a new fitness goal. Metrics: waist_cm, weight_kg, arm_right_cm, arm_left_cm. Direction: decrease (lose), increase (gain), maintain. Provide baseline, target, start and end dates.',
+    {
+      metric: z.string().describe('Metric to track: waist_cm, weight_kg, arm_right_cm, arm_left_cm'),
+      label: z.string().describe('Human-readable goal name, e.g. "Reducir cintura a 94cm"'),
+      direction: z.enum(['decrease', 'increase', 'maintain']).describe('Goal direction'),
+      target_value: z.number().describe('Target value to reach'),
+      baseline_value: z.number().describe('Starting value'),
+      start_date: z.string().describe('Goal start date YYYY-MM-DD'),
+      target_date: z.string().describe('Target completion date YYYY-MM-DD'),
+    },
+    async (params) => {
+      const goal = await GoalService.create(params);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(goal) }] };
+    }
+  );
+
+  server.tool(
+    'update_goal',
+    'Update an existing goal by ID. Can change target, dates, label, or deactivate it.',
+    {
+      goal_id: z.number().describe('ID of the goal to update'),
+      label: z.string().optional(),
+      target_value: z.number().optional(),
+      target_date: z.string().optional(),
+      active: z.number().optional().describe('1 = active, 0 = inactive'),
+    },
+    async ({ goal_id, ...updates }) => {
+      const goal = await GoalService.update(goal_id, updates);
+      if (!goal) return { content: [{ type: 'text' as const, text: 'Goal not found' }] };
+      return { content: [{ type: 'text' as const, text: JSON.stringify(goal) }] };
     }
   );
 

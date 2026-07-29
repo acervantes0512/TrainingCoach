@@ -203,7 +203,9 @@ export class WeeklyComponent implements OnInit {
 
   private formatShortDate(dateStr: string): string {
     const d = new Date(dateStr + 'T12:00:00');
-    return d.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+    const dayName = d.toLocaleDateString('es-MX', { weekday: 'short' });
+    const dayNum = d.getDate();
+    return `${dayName} ${dayNum}`;
   }
 
   private generateTargetLine(points: number, start: number, end: number): number[] {

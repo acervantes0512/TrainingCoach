@@ -11,7 +11,7 @@ import {
   DailySummary,
   WeeklySummary,
   HistoryPoint,
-  GoalProgress,
+  GoalProgress as SummaryGoalProgress,
   ProteinStreak,
   AdherenceDay,
   Milestone,
@@ -21,6 +21,8 @@ import {
   TrainingDay,
   WeeklyReportCard,
   SupplementStatus,
+  Goal,
+  GoalProgress,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -70,8 +72,16 @@ export class ApiService {
     });
   }
 
-  getGoalProgress(): Observable<GoalProgress> {
-    return this.http.get<GoalProgress>(`${this.baseUrl}/summary/progress`);
+  getGoalProgress(): Observable<SummaryGoalProgress> {
+    return this.http.get<SummaryGoalProgress>(`${this.baseUrl}/summary/progress`);
+  }
+
+  getGoals(): Observable<Goal[]> {
+    return this.http.get<Goal[]>(`${this.baseUrl}/goals/active`);
+  }
+
+  getAllGoalsProgress(): Observable<GoalProgress[]> {
+    return this.http.get<GoalProgress[]>(`${this.baseUrl}/goals/progress`);
   }
 
   getProteinStreak(): Observable<ProteinStreak> {

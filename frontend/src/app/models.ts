@@ -197,3 +197,31 @@ export interface SupplementStatus {
   creatine: boolean;
   protein_powder: boolean;
 }
+
+export interface Goal {
+  id: number;
+  metric: string;
+  label: string;
+  direction: 'decrease' | 'increase' | 'maintain';
+  target_value: number;
+  baseline_value: number;
+  start_date: string;
+  target_date: string;
+  active: number;
+}
+
+export interface GoalProgressPoint {
+  date: string;
+  actual: number;
+  ideal: number;
+}
+
+export interface GoalProgress {
+  goal: Goal;
+  current_value: number | null;
+  percent_complete: number;
+  ideal_today: number;
+  diff_from_ideal: number;
+  on_track: boolean;
+  history: GoalProgressPoint[];
+}

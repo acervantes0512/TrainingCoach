@@ -58,6 +58,19 @@ export async function initializeDatabase(): Promise<void> {
       taken INTEGER NOT NULL DEFAULT 0,
       UNIQUE(date, supplement_type)
     );
+
+    CREATE TABLE IF NOT EXISTS goals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      metric TEXT NOT NULL,
+      label TEXT NOT NULL,
+      direction TEXT NOT NULL CHECK (direction IN ('decrease', 'increase', 'maintain')),
+      target_value REAL NOT NULL,
+      baseline_value REAL NOT NULL,
+      start_date TEXT NOT NULL,
+      target_date TEXT NOT NULL,
+      active INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
   `);
 
   const cols = await db.execute("PRAGMA table_info(settings)");
@@ -67,6 +80,19 @@ export async function initializeDatabase(): Promise<void> {
   }
   if (!colNames.includes('initial_weight_kg')) {
     await db.execute("ALTER TABLE settings ADD COLUMN initial_weight_kg REAL NOT NULL DEFAULT 85.4");
+  }
+
+  const goalsCount = await db.execute("SELECT COUNT(*) as cnt FROM goals");
+  const cnt = (goalsCount.rows[0] as unknown as { cnt: number }).cnt;
+  if (cnt === 0) {
+    await db.execute({
+      sql: `INSERT INTO goals (metric, label, direction, target_value, baseline_value, start_date, target_date)
+            VALUES ('waist_cm', 'Reducir cintura', 'decrease', 94, 100.5, '2026-07-27', '2026-09-27'),
+                   ('arm_right_cm', 'Mantener brazo derecho', 'maintain', 35.5, 35.5, '2026-07-27', '2026-09-27'),
+                   ('arm_left_cm', 'Mantener brazo izquierdo', 'maintain', 35.3, 35.3, '2026-07-27', '2026-09-27'),
+                   ('weight_kg', 'Reducir peso', 'decrease', 80, 85.4, '2026-07-27', '2026-09-27')`,
+      args: [],
+    });
   }
 }
 

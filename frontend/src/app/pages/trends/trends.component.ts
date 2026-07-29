@@ -1,94 +1,200 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
-import { MacroBarComponent } from '../../components/macro-bar/macro-bar.component';
-import { MacroProgress, HistoryPoint } from '../../models';
+import { GoalProgress, HistoryPoint } from '../../models';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
+
+type RangePreset = '3m' | '6m' | '1y' | '2y' | 'all' | 'custom';
 
 @Component({
   selector: 'app-trends',
   standalone: true,
-  imports: [CommonModule, MacroBarComponent, BaseChartDirective],
+  imports: [CommonModule, FormsModule, BaseChartDirective],
   templateUrl: './trends.component.html',
   styleUrl: './trends.component.scss',
 })
 export class TrendsComponent implements OnInit {
   private api = inject(ApiService);
 
-  proteinAlert = signal(false);
-  weeklyNutrition = signal<MacroProgress[]>([]);
+  activeRange = signal<RangePreset>('all');
+  customFrom = '';
+  customTo = '';
 
-  proteinChartData = signal<ChartConfiguration<'line'>['data']>({ labels: [], datasets: [] });
-  proteinChartOptions: ChartConfiguration<'line'>['options'] = {
+  goalsProgress = signal<GoalProgress[]>([]);
+
+  waistChartData = signal<ChartConfiguration<'line'>['data']>({ labels: [], datasets: [] });
+  armsChartData = signal<ChartConfiguration<'line'>['data']>({ labels: [], datasets: [] });
+  weightChartData = signal<ChartConfiguration<'line'>['data']>({ labels: [], datasets: [] });
+  nutritionChartData = signal<ChartConfiguration<'bar'>['data']>({ labels: [], datasets: [] });
+
+  lineOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
-    plugins: { legend: { display: false } },
-    scales: {
-      y: { title: { display: true, text: 'g' }, suggestedMin: 100, suggestedMax: 200 },
-    },
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: {
+      title: (items) => {
+        const idx = items[0]?.dataIndex;
+        const raw = (items[0]?.chart?.data as { rawDates?: string[] }).rawDates;
+        if (raw && raw[idx]) {
+          const d = new Date(raw[idx] + 'T12:00:00');
+          return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+        return items[0]?.label || '';
+      }
+    }}},
   };
 
+  barOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+  };
+
+  goalChartConfigs = signal<{ goal: GoalProgress; data: ChartConfiguration<'line'>['data']; options: ChartConfiguration<'line'>['options'] }[]>([]);
+
   ngOnInit(): void {
-    this.loadTrends();
+    this.customTo = new Date().toISOString().split('T')[0];
+    this.customFrom = this.subtractMonths(3);
+    this.loadAll();
   }
 
-  loadTrends(): void {
-    const baselineDate = '2026-07-27';
-    const today = new Date().toISOString().split('T')[0];
+  setRange(range: RangePreset): void {
+    this.activeRange.set(range);
+    this.loadAll();
+  }
 
-    this.api.getHistory('protein', baselineDate, today).subscribe((data) => {
-      const labels = data.map((p) => this.formatDate(p.date));
-      const values = data.map((p) => p.value);
+  applyCustomRange(): void {
+    this.activeRange.set('custom');
+    this.loadAll();
+  }
 
-      const belowFloor = values.filter((v) => v < 140).length;
-      this.proteinAlert.set(belowFloor > 0);
+  loadAll(): void {
+    const { from, to } = this.getDateRange();
+    this.loadCharts(from, to);
+    this.loadGoals();
+  }
 
-      this.proteinChartData.set({
-        labels,
-        datasets: [
-          {
-            label: 'Proteína Diaria',
-            data: values,
-            borderColor: '#4F46E5',
-            backgroundColor: 'rgba(79, 70, 229, 0.1)',
-            tension: 0.3,
-            fill: true,
-          },
-        ],
+  loadCharts(from: string, to: string): void {
+    this.api.getHistory('waist', from, to).subscribe((data) => {
+      this.waistChartData.set(this.buildLineChart(data, 'Cintura (cm)', '#4F46E5'));
+    });
+
+    this.api.getHistory('arm_right', from, to).subscribe((armR) => {
+      this.api.getHistory('arm_left', from, to).subscribe((armL) => {
+        const labels = armR.map((p) => this.formatLabel(p.date));
+        this.armsChartData.set({
+          labels,
+          datasets: [
+            { label: 'Brazo D', data: armR.map((p) => p.value), borderColor: '#10B981', tension: 0.3 },
+            { label: 'Brazo I', data: armL.map((p) => p.value), borderColor: '#F59E0B', tension: 0.3 },
+          ],
+        });
       });
     });
 
-    const monday = this.getMonday(new Date());
-    this.api.getWeeklySummary(monday).subscribe((summary) => {
-      const avg = summary.nutrition_avg;
-      this.weeklyNutrition.set([
-        { label: 'Prom. Calorías', current: avg.calories, min: 2100, max: 2300, status: this.getStatus(avg.calories, 2100, 2300) },
-        { label: 'Prom. Proteína', current: avg.protein_g, min: 150, max: 170, status: this.getStatus(avg.protein_g, 150, 170, 140) },
-        { label: 'Prom. Carbos', current: avg.carbs_g, min: 180, max: 220, status: this.getStatus(avg.carbs_g, 180, 220) },
-        { label: 'Prom. Grasa', current: avg.fat_g, min: 60, max: 70, status: this.getStatus(avg.fat_g, 60, 70) },
-      ]);
+    this.api.getHistory('weight', from, to).subscribe((data) => {
+      this.weightChartData.set(this.buildLineChart(data, 'Peso (kg)', '#6366F1'));
+    });
+
+    this.api.getHistory('protein', from, to).subscribe((protein) => {
+      this.api.getHistory('calories', from, to).subscribe((calories) => {
+        const labels = protein.map((p) => this.formatLabel(p.date));
+        this.nutritionChartData.set({
+          labels,
+          datasets: [
+            { label: 'Proteína (g)', data: protein.map((p) => p.value), backgroundColor: '#4F46E5' },
+            { label: 'Calorías /10', data: calories.map((p) => Math.round(p.value / 10)), backgroundColor: '#F59E0B' },
+          ],
+        });
+      });
     });
   }
 
-  private getStatus(value: number, min: number, max: number, floor?: number): 'green' | 'amber' | 'red' {
-    if (floor !== undefined && value < floor) return 'red';
-    if (value >= min && value <= max) return 'green';
-    const range = max - min;
-    const tolerance = range * 0.5;
-    if (value >= min - tolerance && value <= max + tolerance) return 'amber';
-    return 'red';
+  loadGoals(): void {
+    this.api.getAllGoalsProgress().subscribe((goals) => {
+      this.goalsProgress.set(goals);
+
+      const configs = goals.map((gp) => {
+        const labels = gp.history.map((h) => this.formatLabel(h.date));
+        const data: ChartConfiguration<'line'>['data'] = {
+          labels,
+          datasets: [
+            { label: 'Real', data: gp.history.map((h) => h.actual), borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,0.1)', tension: 0.3, fill: true },
+            { label: 'Ideal', data: gp.history.map((h) => h.ideal), borderColor: '#94A3B8', borderDash: [6, 4], pointRadius: 0 },
+          ],
+        };
+        const options: ChartConfiguration<'line'>['options'] = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom' } },
+          scales: { y: { title: { display: true, text: this.getUnit(gp.goal.metric) } } },
+        };
+        return { goal: gp, data, options };
+      });
+
+      this.goalChartConfigs.set(configs);
+    });
   }
 
-  private formatDate(dateStr: string): string {
+  getDirectionLabel(direction: string): string {
+    const labels: Record<string, string> = { decrease: '↓ Reducir', increase: '↑ Aumentar', maintain: '↔ Mantener' };
+    return labels[direction] || direction;
+  }
+
+  getDirectionClass(gp: GoalProgress): string {
+    if (gp.on_track) return 'on-track';
+    return 'off-track';
+  }
+
+  getDiffLabel(gp: GoalProgress): string {
+    if (gp.diff_from_ideal === 0) return 'En la línea ideal';
+    const abs = Math.abs(gp.diff_from_ideal);
+    if (gp.goal.direction === 'decrease') {
+      return gp.diff_from_ideal > 0 ? `${abs} ${this.getUnit(gp.goal.metric)} arriba de lo ideal` : `${abs} ${this.getUnit(gp.goal.metric)} mejor que lo ideal`;
+    }
+    return gp.diff_from_ideal < 0 ? `${abs} ${this.getUnit(gp.goal.metric)} debajo de lo ideal` : `${abs} ${this.getUnit(gp.goal.metric)} mejor que lo ideal`;
+  }
+
+  private buildLineChart(data: HistoryPoint[], label: string, color: string): ChartConfiguration<'line'>['data'] {
+    return {
+      labels: data.map((p) => this.formatLabel(p.date)),
+      datasets: [{
+        label, data: data.map((p) => p.value),
+        borderColor: color, backgroundColor: color + '1A', tension: 0.3, fill: true,
+      }],
+    };
+  }
+
+  private formatLabel(dateStr: string): string {
     const d = new Date(dateStr + 'T12:00:00');
-    return d.toLocaleDateString('es-MX', { month: 'short', day: 'numeric' });
+    const day = d.toLocaleDateString('es-MX', { weekday: 'short' });
+    const num = d.getDate();
+    const month = d.toLocaleDateString('es-MX', { month: 'short' });
+    return `${day} ${num} ${month}`;
   }
 
-  private getMonday(d: Date): string {
-    const date = new Date(d);
-    const day = date.getDay();
-    const diff = date.getDate() - day + (day === 0 ? -6 : 1);
-    date.setDate(diff);
-    return date.toISOString().split('T')[0];
+  private getUnit(metric: string): string {
+    if (metric.includes('cm')) return 'cm';
+    if (metric.includes('kg')) return 'kg';
+    return '';
+  }
+
+  private getDateRange(): { from: string; to: string } {
+    const to = new Date().toISOString().split('T')[0];
+    const range = this.activeRange();
+    if (range === 'custom') return { from: this.customFrom, to: this.customTo };
+    if (range === 'all') return { from: '2020-01-01', to };
+    if (range === '3m') return { from: this.subtractMonths(3), to };
+    if (range === '6m') return { from: this.subtractMonths(6), to };
+    if (range === '1y') return { from: this.subtractMonths(12), to };
+    if (range === '2y') return { from: this.subtractMonths(24), to };
+    return { from: '2020-01-01', to };
+  }
+
+  private subtractMonths(months: number): string {
+    const d = new Date();
+    d.setMonth(d.getMonth() - months);
+    return d.toISOString().split('T')[0];
   }
 }

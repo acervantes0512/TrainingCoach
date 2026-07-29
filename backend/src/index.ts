@@ -9,6 +9,7 @@ import settingsRouter from './routes/settings.js';
 import summaryRouter from './routes/summary.js';
 import insightsRouter from './routes/insights.js';
 import supplementsRouter from './routes/supplements.js';
+import goalsRouter from './routes/goals.js';
 
 const PORT = Number(process.env.PORT) || 3000;
 const API_KEY = process.env.API_KEY || 'dev-key';
@@ -39,6 +40,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/summary', summaryRouter);
 app.use('/api/insights', insightsRouter);
 app.use('/api/supplements', supplementsRouter);
+app.use('/api/goals', goalsRouter);
 
 app.post('/mcp', async (req, res) => {
   try {

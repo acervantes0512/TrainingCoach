@@ -1,30 +1,99 @@
 <div class="trends-page">
-  <h2 class="page-title">Tendencias Nutricionales</h2>
+  <h2 class="page-title">Tendencias</h2>
 
-  @if (proteinAlert()) {
-    <div class="alert alert-danger">
-      ⚠️ <strong>Proteína por debajo del piso de 140g.</strong> Este es el mínimo diario no negociable — no se compensa entre días.
+  <!-- Range Filter -->
+  <div class="range-bar">
+    <div class="range-presets">
+      <button [class.active]="activeRange() === '3m'" (click)="setRange('3m')">3M</button>
+      <button [class.active]="activeRange() === '6m'" (click)="setRange('6m')">6M</button>
+      <button [class.active]="activeRange() === '1y'" (click)="setRange('1y')">1A</button>
+      <button [class.active]="activeRange() === '2y'" (click)="setRange('2y')">2A</button>
+      <button [class.active]="activeRange() === 'all'" (click)="setRange('all')">Todo</button>
+    </div>
+    <div class="range-custom">
+      <input type="date" [(ngModel)]="customFrom" name="from">
+      <span>—</span>
+      <input type="date" [(ngModel)]="customTo" name="to">
+      <button class="btn btn-primary btn-sm" (click)="applyCustomRange()">Aplicar</button>
+    </div>
+  </div>
+
+  <!-- Measurement Charts -->
+  <div class="charts-grid">
+    <section class="card chart-card">
+      <h3 class="card-title">Cintura</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="waistChartData()" [options]="lineOptions"></canvas></div>
+    </section>
+    <section class="card chart-card">
+      <h3 class="card-title">Brazos</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="armsChartData()" [options]="lineOptions"></canvas></div>
+    </section>
+    <section class="card chart-card">
+      <h3 class="card-title">Peso</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="weightChartData()" [options]="lineOptions"></canvas></div>
+    </section>
+    <section class="card chart-card">
+      <h3 class="card-title">Nutrición</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'bar'" [data]="nutritionChartData()" [options]="barOptions"></canvas></div>
+    </section>
+  </div>
+
+  <!-- Goals Section -->
+  @if (goalsProgress().length > 0) {
+    <h2 class="section-title">Metas Activas</h2>
+
+    @for (config of goalChartConfigs(); track config.goal.goal.id) {
+      <section class="card goal-card">
+        <div class="goal-header">
+          <div class="goal-info">
+            <h3 class="goal-label">{{ config.goal.goal.label }}</h3>
+            <span class="goal-direction">{{ getDirectionLabel(config.goal.goal.direction) }}</span>
+          </div>
+          <div class="goal-stats">
+            <div class="goal-stat">
+              <span class="gs-value">{{ config.goal.goal.baseline_value }}</span>
+              <span class="gs-label">Inicio</span>
+            </div>
+            <div class="goal-stat">
+              <span class="gs-value" [class]="getDirectionClass(config.goal)">{{ config.goal.current_value ?? '—' }}</span>
+              <span class="gs-label">Actual</span>
+            </div>
+            <div class="goal-stat">
+              <span class="gs-value">{{ config.goal.goal.target_value }}</span>
+              <span class="gs-label">Meta</span>
+            </div>
+            <div class="goal-stat">
+              <span class="gs-value" [class]="getDirectionClass(config.goal)">{{ config.goal.percent_complete }}%</span>
+              <span class="gs-label">Progreso</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="goal-progress-bar">
+          <div class="gpb-fill" [class]="getDirectionClass(config.goal)" [style.width.%]="config.goal.percent_complete"></div>
+        </div>
+
+        <!-- Diff indicator -->
+        <p class="goal-diff" [class]="getDirectionClass(config.goal)">{{ getDiffLabel(config.goal) }}</p>
+
+        <!-- Chart: Actual vs Ideal -->
+        @if (config.goal.history.length > 0) {
+          <div class="goal-chart-wrap"><canvas baseChart [type]="'line'" [data]="config.data" [options]="config.options"></canvas></div>
+        } @else {
+          <p class="empty-state">Sin datos aún para esta meta</p>
+        }
+
+        <div class="goal-dates">
+          <span>{{ config.goal.goal.start_date }}</span>
+          <span>→</span>
+          <span>{{ config.goal.goal.target_date }}</span>
+        </div>
+      </section>
+    }
+  } @else {
+    <div class="empty-goals">
+      <p>No hay metas activas. Crea una desde Claude o la API.</p>
     </div>
   }
-
-  <section class="card">
-    <h3 class="card-title">Promedios Semanales vs. Metas</h3>
-    @for (macro of weeklyNutrition(); track macro.label) {
-      <app-macro-bar [macro]="macro" />
-    }
-    @if (!weeklyNutrition().length) {
-      <p class="empty-state">Sin datos de nutrición esta semana</p>
-    }
-  </section>
-
-  <section class="card chart-section">
-    <h3 class="card-title">Consumo Diario de Proteína</h3>
-    <div class="chart-container">
-      <canvas baseChart [type]="'line'" [data]="proteinChartData()" [options]="proteinChartOptions"></canvas>
-    </div>
-    <div class="chart-legend">
-      <span class="legend-line legend-floor"></span>
-      <span class="legend-text">Piso: 140g (no negociable)</span>
-    </div>
-  </section>
 </div>
