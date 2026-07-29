@@ -79,7 +79,10 @@
 
         <!-- Chart: Actual vs Ideal -->
         @if (config.goal.history.length > 0) {
-          <div class="goal-chart-wrap"><canvas baseChart [type]="'line'" [data]="config.data" [options]="config.options"></canvas></div>
+          <div class="goal-chart-wrap">
+            <canvas baseChart [type]="'line'" [data]="config.data" [options]="config.options"></canvas>
+          </div>
+          <p class="zoom-hint">Scroll para zoom · Arrastra para mover</p>
         } @else {
           <p class="empty-state">Sin datos aún para esta meta</p>
         }

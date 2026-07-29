@@ -4,7 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { GoalProgress, HistoryPoint } from '../../models';
 import { BaseChartDirective } from 'ng2-charts';
-import { ChartConfiguration } from 'chart.js';
+import { ChartConfiguration, Chart } from 'chart.js';
+import zoomPlugin from 'chartjs-plugin-zoom';
+
+Chart.register(zoomPlugin);
 
 type RangePreset = '3m' | '6m' | '1y' | '2y' | 'all' | 'custom';
 
@@ -116,19 +119,89 @@ export class TrendsComponent implements OnInit {
       this.goalsProgress.set(goals);
 
       const configs = goals.map((gp) => {
-        const labels = gp.history.map((h) => this.formatLabel(h.date));
+        const allDates = new Map<string, { actual: number | null; ideal: number | null }>();
+
+        for (const pt of gp.ideal_line) {
+          allDates.set(pt.date, { actual: null, ideal: pt.value });
+        }
+
+        for (const pt of gp.history) {
+          const existing = allDates.get(pt.date);
+          if (existing) {
+            existing.actual = pt.actual;
+          } else {
+            allDates.set(pt.date, { actual: pt.actual, ideal: null });
+          }
+        }
+
+        const sorted = [...allDates.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+        const labels = sorted.map(([d]) => this.formatLabel(d));
+        const idealValues = sorted.map(([, v]) => v.ideal);
+        const actualValues = sorted.map(([, v]) => v.actual);
+
         const data: ChartConfiguration<'line'>['data'] = {
           labels,
           datasets: [
-            { label: 'Real', data: gp.history.map((h) => h.actual), borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,0.1)', tension: 0.3, fill: true },
-            { label: 'Ideal', data: gp.history.map((h) => h.ideal), borderColor: '#94A3B8', borderDash: [6, 4], pointRadius: 0 },
+            {
+              label: 'Real',
+              data: actualValues as (number | null)[],
+              borderColor: '#4F46E5',
+              backgroundColor: 'rgba(79,70,229,0.08)',
+              tension: 0,
+              fill: true,
+              spanGaps: true,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              borderWidth: 2,
+            },
+            {
+              label: 'Ideal',
+              data: idealValues as (number | null)[],
+              borderColor: '#94A3B8',
+              borderDash: [6, 4],
+              pointRadius: 0,
+              pointHoverRadius: 4,
+              borderWidth: 1.5,
+              tension: 0,
+              spanGaps: true,
+            },
           ],
         };
+
         const options: ChartConfiguration<'line'>['options'] = {
           responsive: true,
           maintainAspectRatio: false,
-          plugins: { legend: { position: 'bottom' } },
-          scales: { y: { title: { display: true, text: this.getUnit(gp.goal.metric) } } },
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { position: 'bottom' },
+            tooltip: {
+              callbacks: {
+                title: (items) => {
+                  const idx = items[0]?.dataIndex;
+                  if (idx !== undefined) {
+                    const dateStr = sorted[idx]?.[0];
+                    if (dateStr) {
+                      const d = new Date(dateStr + 'T12:00:00');
+                      return d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+                    }
+                  }
+                  return '';
+                },
+                label: (item) => {
+                  const val = item.raw as number | null;
+                  if (val === null) return '';
+                  return `${item.dataset.label}: ${val} ${this.getUnit(gp.goal.metric)}`;
+                },
+              },
+            },
+            zoom: {
+              zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' },
+              pan: { enabled: true, mode: 'x' },
+            },
+          },
+          scales: {
+            y: { title: { display: true, text: this.getUnit(gp.goal.metric) } },
+          },
         };
         return { goal: gp, data, options };
       });

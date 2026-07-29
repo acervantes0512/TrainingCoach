@@ -22,6 +22,7 @@ export interface GoalProgress {
   diff_from_ideal: number;
   on_track: boolean;
   history: { date: string; actual: number; ideal: number }[];
+  ideal_line: { date: string; value: number }[];
 }
 
 export interface GoalInput {
@@ -145,6 +146,16 @@ export async function getProgress(id: number): Promise<GoalProgress | null> {
     };
   });
 
+  const idealLine: { date: string; value: number }[] = [];
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 7)) {
+    const dDays = (d.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
+    const val = goal.baseline_value + ((goal.target_value - goal.baseline_value) * dDays / totalDays);
+    idealLine.push({ date: d.toISOString().split('T')[0], value: Math.round(val * 100) / 100 });
+  }
+  if (idealLine[idealLine.length - 1]?.date !== goal.target_date) {
+    idealLine.push({ date: goal.target_date, value: goal.target_value });
+  }
+
   return {
     goal,
     current_value: currentValue,
@@ -153,6 +164,7 @@ export async function getProgress(id: number): Promise<GoalProgress | null> {
     diff_from_ideal: diffFromIdeal,
     on_track: onTrack,
     history,
+    ideal_line: idealLine,
   };
 }
 

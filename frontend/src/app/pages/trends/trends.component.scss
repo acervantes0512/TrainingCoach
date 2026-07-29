@@ -54,7 +54,9 @@
 
 .goal-diff { font-size: 0.75rem; font-weight: 600; margin: 0 0 0.75rem; }
 
-.goal-chart-wrap { height: 220px; position: relative; }
+.goal-chart-wrap { height: 250px; position: relative; }
+
+.zoom-hint { font-size: 0.65rem; color: var(--color-text-secondary); text-align: center; margin: 0.25rem 0 0; }
 
 .goal-dates {
   display: flex; justify-content: space-between; align-items: center;

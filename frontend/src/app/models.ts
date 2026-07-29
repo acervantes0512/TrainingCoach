@@ -224,4 +224,5 @@ export interface GoalProgress {
   diff_from_ideal: number;
   on_track: boolean;
   history: GoalProgressPoint[];
+  ideal_line: { date: string; value: number }[];
 }
