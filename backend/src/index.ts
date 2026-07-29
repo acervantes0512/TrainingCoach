@@ -40,7 +40,7 @@ app.use('/api/summary', summaryRouter);
 app.use('/api/insights', insightsRouter);
 app.use('/api/supplements', supplementsRouter);
 
-app.post('/mcp', mcpAuth, async (req, res) => {
+app.post('/mcp', async (req, res) => {
   try {
     const transport = new StreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
