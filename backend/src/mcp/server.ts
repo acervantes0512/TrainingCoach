@@ -25,7 +25,7 @@ export function createMcpServer(): McpServer {
       weight_kg: z.number().describe('Body weight in kg'),
     },
     async ({ date, waist_cm, arm_right_cm, arm_left_cm, weight_kg }) => {
-      const measurement = MeasurementService.upsert({ date, waist_cm, arm_right_cm, arm_left_cm, weight_kg });
+      const measurement = await MeasurementService.upsert({ date, waist_cm, arm_right_cm, arm_left_cm, weight_kg });
       return { content: [{ type: 'text' as const, text: JSON.stringify(measurement) }] };
     }
   );
@@ -44,8 +44,20 @@ export function createMcpServer(): McpServer {
       photo_url: z.string().optional().describe('Optional photo URL'),
     },
     async (params) => {
-      const meal = MealService.create(params);
-      return { content: [{ type: 'text' as const, text: JSON.stringify(meal) }] };
+      const meal = await MealService.create(params);
+      return { content: [{ type: 'text' as const, text: `Meal created with ID ${meal.id}: ${JSON.stringify(meal)}` }] };
+    }
+  );
+
+  server.tool(
+    'get_meals',
+    'Get all meals for a specific date with their IDs. Use this to find meal IDs before updating or deleting.',
+    {
+      date: z.string().describe('Date in YYYY-MM-DD format'),
+    },
+    async ({ date }) => {
+      const meals = await MealService.getByDate(date);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(meals) }] };
     }
   );
 
@@ -63,9 +75,9 @@ export function createMcpServer(): McpServer {
       photo_url: z.string().optional(),
     },
     async ({ meal_id, ...updates }) => {
-      const meal = MealService.update(meal_id, updates);
+      const meal = await MealService.update(meal_id, updates);
       if (!meal) return { content: [{ type: 'text' as const, text: 'Meal not found' }] };
-      return { content: [{ type: 'text' as const, text: JSON.stringify(meal) }] };
+      return { content: [{ type: 'text' as const, text: `Meal ${meal_id} updated: ${JSON.stringify(meal)}` }] };
     }
   );
 
@@ -88,7 +100,7 @@ export function createMcpServer(): McpServer {
       date: z.string().describe('Date in YYYY-MM-DD format'),
     },
     async ({ date }) => {
-      const summary = SummaryService.getDailySummary(date);
+      const summary = await SummaryService.getDailySummary(date);
       return { content: [{ type: 'text' as const, text: JSON.stringify(summary) }] };
     }
   );
@@ -100,7 +112,7 @@ export function createMcpServer(): McpServer {
       week_start_date: z.string().describe('Monday date of the week in YYYY-MM-DD format'),
     },
     async ({ week_start_date }) => {
-      const summary = SummaryService.getWeeklySummary(week_start_date);
+      const summary = await SummaryService.getWeeklySummary(week_start_date);
       return { content: [{ type: 'text' as const, text: JSON.stringify(summary) }] };
     }
   );
@@ -114,7 +126,7 @@ export function createMcpServer(): McpServer {
       to_date: z.string().describe('End date YYYY-MM-DD'),
     },
     async ({ metric, from_date, to_date }) => {
-      const history = SummaryService.getHistory(metric, from_date, to_date);
+      const history = await SummaryService.getHistory(metric, from_date, to_date);
       return { content: [{ type: 'text' as const, text: JSON.stringify(history) }] };
     }
   );
@@ -124,7 +136,7 @@ export function createMcpServer(): McpServer {
     'Get current goal progress: waist cm remaining, loss rate, weeks remaining, projected completion date, achievability. Goal: waist <= 94cm by Sep 27 2026, from 100.5cm on Jul 27 2026. Target rate ~0.73 cm/week.',
     {},
     async () => {
-      const progress = SummaryService.getGoalProgress();
+      const progress = await SummaryService.getGoalProgress();
       return { content: [{ type: 'text' as const, text: JSON.stringify(progress) }] };
     }
   );
@@ -146,7 +158,7 @@ export function createMcpServer(): McpServer {
       fat_max_g: z.number().optional(),
     },
     async (params) => {
-      const settings = SettingsService.update(params);
+      const settings = await SettingsService.update(params);
       return { content: [{ type: 'text' as const, text: JSON.stringify(settings) }] };
     }
   );
