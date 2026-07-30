@@ -39,7 +39,7 @@
         @for (item of proteinDist(); track item.meal_type) {
           <div class="dist-row">
             <span class="dist-label">{{ item.label }}</span>
-            <div class="dist-track"><div class="dist-fill" [class.optimal]="item.optimal" [class.low]="item.protein_g < 25" [style.width.%]="(item.protein_g / 55) * 100"></div></div>
+            <div class="dist-track"><div class="dist-fill" [class.optimal]="item.optimal" [class.low]="item.protein_g < 25" [style.width.%]="item.protein_g > 55 ? 100 : (item.protein_g / 55) * 100"></div></div>
             <span class="dist-val" [class.optimal]="item.optimal">{{ item.protein_g }}g</span>
           </div>
         }
