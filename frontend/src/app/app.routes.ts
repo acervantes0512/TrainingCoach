@@ -1,8 +1,11 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'daily', pathMatch: 'full' },
-  { path: 'daily', loadComponent: () => import('./pages/daily/daily.component').then(m => m.DailyComponent) },
-  { path: 'weekly', loadComponent: () => import('./pages/weekly/weekly.component').then(m => m.WeeklyComponent) },
-  { path: 'trends', loadComponent: () => import('./pages/trends/trends.component').then(m => m.TrendsComponent) },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: 'dashboard', loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+  { path: 'measurements', loadComponent: () => import('./pages/measurements/measurements.component').then(m => m.MeasurementsComponent) },
+  { path: 'nutrition', loadComponent: () => import('./pages/nutrition/nutrition.component').then(m => m.NutritionComponent) },
+  { path: 'goals', loadComponent: () => import('./pages/goals/goals.component').then(m => m.GoalsComponent) },
+  { path: 'settings', loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent) },
+  { path: '**', redirectTo: 'dashboard' },
 ];

@@ -1,0 +1,190 @@
+<div class="dashboard">
+  <!-- Top Banner -->
+  <header class="day-banner">
+    <div class="banner-left">
+      <h1 class="banner-date">{{ today | date:'EEEE, d MMMM':'':'es' }}</h1>
+      @if (trainingDay()) {
+        <span class="banner-training">{{ trainingDay()!.emoji }} {{ trainingDay()!.label }}</span>
+      } @else {
+        <span class="banner-training rest">😴 Día de descanso</span>
+      }
+    </div>
+    <div class="banner-right">
+      @if (proteinStreak(); as streak) {
+        <div class="streak-badge">🔥 {{ streak.current_streak }} días</div>
+      }
+      <div class="supp-badges">
+        <button class="supp-badge" [class.done]="supplements()?.creatine" (click)="toggleSupplement('creatine')">Creatina {{ supplements()?.creatine ? '✅' : '⬜' }}</button>
+        <button class="supp-badge" [class.done]="supplements()?.protein_powder" (click)="toggleSupplement('protein_powder')">Proteína {{ supplements()?.protein_powder ? '✅' : '⬜' }}</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="dashboard-grid">
+    <!-- Measurements Quick View -->
+    <section class="panel measurements-panel">
+      <div class="panel-header">
+        <h2>Medidas Hoy</h2>
+        <a routerLink="/measurements" class="panel-link">Ver todo →</a>
+      </div>
+      @if (summary()?.measurement) {
+        <div class="metrics-row">
+          <div class="metric">
+            <span class="metric-value">{{ summary()!.measurement!.waist_cm }}</span>
+            <span class="metric-unit">cm</span>
+            <span class="metric-label">Cintura</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ summary()!.measurement!.arm_right_cm }}</span>
+            <span class="metric-unit">cm</span>
+            <span class="metric-label">Brazo D</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ summary()!.measurement!.arm_left_cm }}</span>
+            <span class="metric-unit">cm</span>
+            <span class="metric-label">Brazo I</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value">{{ summary()!.measurement!.weight_kg }}</span>
+            <span class="metric-unit">kg</span>
+            <span class="metric-label">Peso</span>
+          </div>
+        </div>
+      } @else {
+        <p class="no-data">Sin medidas hoy — <a routerLink="/measurements">Registrar</a></p>
+      }
+    </section>
+
+    <!-- Main Goal -->
+    <section class="panel goal-panel">
+      <div class="panel-header">
+        <h2>Meta Principal</h2>
+        <a routerLink="/goals" class="panel-link">Todas →</a>
+      </div>
+      @if (mainGoal(); as goal) {
+        <div class="goal-summary">
+          <div class="goal-gauge">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-border)" stroke-width="8"/>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-primary)" stroke-width="8"
+                      stroke-dasharray="314" [attr.stroke-dashoffset]="314 - (314 * goal.percent_complete / 100)"
+                      stroke-linecap="round" transform="rotate(-90 60 60)"/>
+            </svg>
+            <span class="gauge-text">{{ goal.percent_complete }}%</span>
+          </div>
+          <div class="goal-details">
+            <h3>{{ goal.goal.label }}</h3>
+            <div class="goal-numbers">
+              <span>{{ goal.goal.baseline_value }} → <strong>{{ goal.current_value ?? '—' }}</strong> → {{ goal.goal.target_value }} {{ goal.goal.metric.includes('cm') ? 'cm' : 'kg' }}</span>
+            </div>
+            <p class="goal-status" [class.on-track]="goal.on_track" [class.off-track]="!goal.on_track">
+              {{ goal.on_track ? '✓ En ritmo' : '⚠ Necesita ajuste' }} · Ideal hoy: {{ goal.ideal_today }}
+            </p>
+          </div>
+        </div>
+      } @else {
+        <p class="no-data">Sin metas activas — <a routerLink="/goals">Crear una</a></p>
+      }
+    </section>
+
+    <!-- Macros Today -->
+    <section class="panel macros-panel">
+      <div class="panel-header">
+        <h2>Macros Hoy</h2>
+        <a routerLink="/nutrition" class="panel-link">Detalle →</a>
+      </div>
+      @if (summary()?.totals; as totals) {
+        <div class="macros-grid">
+          <div class="macro-gauge-item">
+            <div class="macro-ring" [class]="getMacroStatus(totals.calories, 2100, 2300)">
+              <svg viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--color-border)" stroke-width="6"/>
+                <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" stroke-width="6"
+                        stroke-dasharray="213.6" [attr.stroke-dashoffset]="213.6 - (213.6 * getMacroPercent(totals.calories, 2300) / 100)"
+                        stroke-linecap="round" transform="rotate(-90 40 40)"/>
+              </svg>
+              <span class="macro-ring-val">{{ totals.calories | number:'1.0-0' }}</span>
+            </div>
+            <span class="macro-ring-label">kcal</span>
+            <span class="macro-ring-target">/ 2100-2300</span>
+          </div>
+          <div class="macro-gauge-item">
+            <div class="macro-ring" [class]="getMacroStatus(totals.protein_g, 150, 170)">
+              <svg viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--color-border)" stroke-width="6"/>
+                <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" stroke-width="6"
+                        stroke-dasharray="213.6" [attr.stroke-dashoffset]="213.6 - (213.6 * getMacroPercent(totals.protein_g, 170) / 100)"
+                        stroke-linecap="round" transform="rotate(-90 40 40)"/>
+              </svg>
+              <span class="macro-ring-val">{{ totals.protein_g | number:'1.0-0' }}</span>
+            </div>
+            <span class="macro-ring-label">Proteína</span>
+            <span class="macro-ring-target">/ 150-170g</span>
+          </div>
+          <div class="macro-gauge-item">
+            <div class="macro-ring" [class]="getMacroStatus(totals.carbs_g, 180, 220)">
+              <svg viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--color-border)" stroke-width="6"/>
+                <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" stroke-width="6"
+                        stroke-dasharray="213.6" [attr.stroke-dashoffset]="213.6 - (213.6 * getMacroPercent(totals.carbs_g, 220) / 100)"
+                        stroke-linecap="round" transform="rotate(-90 40 40)"/>
+              </svg>
+              <span class="macro-ring-val">{{ totals.carbs_g | number:'1.0-0' }}</span>
+            </div>
+            <span class="macro-ring-label">Carbos</span>
+            <span class="macro-ring-target">/ 180-220g</span>
+          </div>
+          <div class="macro-gauge-item">
+            <div class="macro-ring" [class]="getMacroStatus(totals.fat_g, 60, 70)">
+              <svg viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="var(--color-border)" stroke-width="6"/>
+                <circle cx="40" cy="40" r="34" fill="none" stroke="currentColor" stroke-width="6"
+                        stroke-dasharray="213.6" [attr.stroke-dashoffset]="213.6 - (213.6 * getMacroPercent(totals.fat_g, 70) / 100)"
+                        stroke-linecap="round" transform="rotate(-90 40 40)"/>
+              </svg>
+              <span class="macro-ring-val">{{ totals.fat_g | number:'1.0-0' }}</span>
+            </div>
+            <span class="macro-ring-label">Grasa</span>
+            <span class="macro-ring-target">/ 60-70g</span>
+          </div>
+        </div>
+      } @else {
+        <p class="no-data">Sin comidas hoy — <a routerLink="/nutrition">Registrar</a></p>
+      }
+    </section>
+
+    <!-- Weekly Report -->
+    <section class="panel report-panel">
+      <div class="panel-header">
+        <h2>Reporte Semanal</h2>
+      </div>
+      @if (reportCard(); as rc) {
+        <div class="report-content">
+          <div class="report-grade" [style.color]="rc.overall_grade.startsWith('A') ? 'var(--color-success)' : rc.overall_grade === 'B' ? 'var(--color-warning)' : 'var(--color-danger)'">{{ rc.overall_grade }}</div>
+          <div class="report-details">
+            <div class="report-items">
+              <span class="ri">Prot <strong>{{ rc.protein_grade }}</strong></span>
+              <span class="ri">Cal <strong>{{ rc.calories_grade }}</strong></span>
+              <span class="ri">Medidas <strong>{{ rc.measurements_grade }}</strong></span>
+              <span class="ri">Ritmo <strong>{{ rc.waist_rate_grade }}</strong></span>
+              <span class="ri">Brazos <strong>{{ rc.arms_preservation_grade }}</strong></span>
+            </div>
+            <p class="report-msg">{{ rc.message }}</p>
+          </div>
+        </div>
+      } @else {
+        <p class="no-data">Sin datos suficientes para reporte</p>
+      }
+    </section>
+
+    <!-- Sparkline -->
+    <section class="panel spark-panel">
+      <div class="panel-header">
+        <h2>Cintura — últimos 14 días</h2>
+      </div>
+      <div class="spark-chart">
+        <canvas baseChart [type]="'line'" [data]="sparkData()" [options]="sparkOptions"></canvas>
+      </div>
+    </section>
+  </div>
+</div>

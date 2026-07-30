@@ -1,0 +1,109 @@
+<div class="goals-page">
+  <header class="page-header">
+    <h1>🎯 Mis Metas</h1>
+    <button class="btn-add" (click)="showForm.set(!showForm())">{{ showForm() ? '✕ Cancelar' : '+ Nueva Meta' }}</button>
+  </header>
+
+  <!-- New Goal Form -->
+  @if (showForm()) {
+    <section class="panel form-panel">
+      <h2>Crear Meta</h2>
+      <form (ngSubmit)="createGoal()">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Métrica</label>
+            <select [(ngModel)]="newGoal.metric" name="metric">
+              <option value="waist_cm">Cintura (cm)</option>
+              <option value="weight_kg">Peso (kg)</option>
+              <option value="arm_right_cm">Brazo Derecho (cm)</option>
+              <option value="arm_left_cm">Brazo Izquierdo (cm)</option>
+            </select>
+          </div>
+          <div class="form-field">
+            <label>Dirección</label>
+            <select [(ngModel)]="newGoal.direction" name="direction">
+              <option value="decrease">↓ Reducir</option>
+              <option value="increase">↑ Aumentar</option>
+              <option value="maintain">↔ Mantener</option>
+            </select>
+          </div>
+          <div class="form-field wide">
+            <label>Nombre de la meta</label>
+            <input type="text" [(ngModel)]="newGoal.label" name="label" placeholder="Ej: Reducir cintura a 90cm">
+          </div>
+          <div class="form-field"><label>Valor Inicial</label><input type="number" step="0.1" [(ngModel)]="newGoal.baseline_value" name="baseline"></div>
+          <div class="form-field"><label>Valor Meta</label><input type="number" step="0.1" [(ngModel)]="newGoal.target_value" name="target"></div>
+          <div class="form-field"><label>Fecha Inicio</label><input type="date" [(ngModel)]="newGoal.start_date" name="startDate"></div>
+          <div class="form-field"><label>Fecha Meta</label><input type="date" [(ngModel)]="newGoal.target_date" name="targetDate"></div>
+        </div>
+        <button type="submit" class="btn-submit">Crear Meta</button>
+      </form>
+    </section>
+  }
+
+  <!-- Active Goals -->
+  @for (config of chartConfigs(); track config.gp.goal.id) {
+    <section class="panel goal-panel">
+      <div class="goal-top">
+        <div class="goal-info">
+          <h3>{{ config.gp.goal.label }}</h3>
+          <div class="goal-tags">
+            <span class="tag">{{ getMetricLabel(config.gp.goal.metric) }}</span>
+            <span class="tag">{{ getDirectionLabel(config.gp.goal.direction) }}</span>
+          </div>
+        </div>
+        <div class="goal-metrics">
+          <div class="gm"><span class="gm-val">{{ config.gp.goal.baseline_value }}</span><span class="gm-lbl">Inicio</span></div>
+          <div class="gm"><span class="gm-val current" [class.on-track]="config.gp.on_track" [class.off-track]="!config.gp.on_track">{{ config.gp.current_value ?? '—' }}</span><span class="gm-lbl">Actual</span></div>
+          <div class="gm"><span class="gm-val">{{ config.gp.goal.target_value }}</span><span class="gm-lbl">Meta</span></div>
+          <div class="gm"><span class="gm-val" [class.on-track]="config.gp.on_track">{{ config.gp.percent_complete }}%</span><span class="gm-lbl">Progreso</span></div>
+        </div>
+      </div>
+
+      <!-- Progress bar -->
+      <div class="goal-bar"><div class="goal-bar-fill" [class.on-track]="config.gp.on_track" [class.off-track]="!config.gp.on_track" [style.width.%]="config.gp.percent_complete"></div></div>
+
+      <!-- Status + Prediction -->
+      <div class="goal-status-row">
+        <span class="gs-diff" [class.on-track]="config.gp.on_track" [class.off-track]="!config.gp.on_track">{{ getDiffText(config.gp) }}</span>
+        <span class="gs-prediction">{{ getPrediction(config.gp) }}</span>
+      </div>
+
+      <!-- Chart -->
+      @if (config.gp.history.length > 0) {
+        <div class="goal-chart"><canvas baseChart [type]="'line'" [data]="config.data" [options]="config.options"></canvas></div>
+        <p class="chart-hint">Scroll para zoom · Arrastra para mover</p>
+      } @else {
+        <p class="empty">Sin datos aún</p>
+      }
+
+      <div class="goal-dates">
+        <span>{{ config.gp.goal.start_date }}</span>
+        <span>→</span>
+        <span>{{ config.gp.goal.target_date }}</span>
+      </div>
+    </section>
+  }
+
+  @if (!chartConfigs().length && !showForm()) {
+    <div class="empty-state">
+      <p>No hay metas activas. Crea tu primera meta para empezar a trackear tu progreso.</p>
+    </div>
+  }
+
+  <!-- Milestones -->
+  @if (milestones().length > 0) {
+    <section class="panel milestones-panel">
+      <h2>🏆 Hitos de Cintura</h2>
+      <div class="milestones-row">
+        @for (m of milestones(); track m.value) {
+          <div class="milestone" [class.reached]="m.reached">
+            <span class="ms-icon">{{ m.reached ? '🏆' : '⚪' }}</span>
+            <span class="ms-val">&lt; {{ m.value }}cm</span>
+            @if (m.date_reached) { <span class="ms-date">{{ m.date_reached }}</span> }
+          </div>
+        }
+      </div>
+    </section>
+  }
+</div>

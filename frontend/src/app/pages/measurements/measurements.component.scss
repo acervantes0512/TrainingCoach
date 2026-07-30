@@ -1,0 +1,60 @@
+.measurements-page { display: flex; flex-direction: column; gap: 1rem; }
+
+.page-header {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;
+  h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+}
+
+.range-bar {
+  display: flex; gap: 0.25rem;
+  button {
+    padding: 0.3rem 0.7rem; border: 1px solid var(--color-border); border-radius: 6px;
+    background: var(--color-surface); cursor: pointer; font-size: 0.7rem; font-weight: 600;
+    &.active { background: var(--color-primary); color: white; border-color: var(--color-primary); }
+    &:hover:not(.active) { background: var(--color-bg); }
+  }
+}
+
+.panel {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: 12px; padding: 1rem 1.25rem;
+  h2, h3 { margin: 0 0 0.75rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary); letter-spacing: 0.3px; }
+}
+
+.form-panel {
+  .form-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; }
+  .form-field {
+    display: flex; flex-direction: column; gap: 0.2rem; min-width: 120px;
+    label { font-size: 0.65rem; font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; }
+    input { padding: 0.4rem 0.6rem; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.85rem; }
+  }
+  .btn-submit {
+    padding: 0.4rem 1rem; background: var(--color-primary); color: white; border: none;
+    border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+    &:hover { opacity: 0.9; }
+  }
+}
+
+.charts-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+.chart-panel { .chart-wrap { height: 200px; position: relative; } }
+
+.info-tip { cursor: help; font-size: 0.75rem; }
+
+.indicators-row {
+  display: flex; gap: 1rem; flex-wrap: wrap;
+  .indicator {
+    flex: 1; min-width: 200px; padding: 1rem; background: var(--color-surface);
+    border: 1px solid var(--color-border); border-radius: 12px;
+    .ind-label { display: block; font-size: 0.65rem; text-transform: uppercase; color: var(--color-text-secondary); font-weight: 600; margin-bottom: 0.25rem; }
+    .ind-value { display: block; font-size: 1.5rem; font-weight: 800; margin-bottom: 0.15rem;
+      &.excellent { color: var(--color-success); }
+      &.normal { color: var(--color-warning); }
+      &.warning { color: var(--color-danger); }
+    }
+    .ind-detail { font-size: 0.7rem; color: var(--color-text-secondary); }
+  }
+}

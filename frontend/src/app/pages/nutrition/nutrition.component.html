@@ -1,0 +1,143 @@
+<div class="nutrition-page">
+  <header class="page-header">
+    <h1>🍽️ Nutrición</h1>
+    <div class="date-nav">
+      <button class="nav-btn" (click)="prevDay()">‹</button>
+      <span class="date-display">{{ displayDate() }}</span>
+      <button class="nav-btn" (click)="nextDay()">›</button>
+    </div>
+    <button class="btn-add" (click)="openAddForm()">+ Comida</button>
+  </header>
+
+  <!-- Macros Gauges -->
+  @if (summary()?.totals; as totals) {
+    <div class="macros-row">
+      <div class="macro-item">
+        <div class="macro-bar"><div class="macro-fill" [style.width.%]="getMacroPercent(totals.calories, 2300)"></div></div>
+        <span class="macro-val">{{ totals.calories | number:'1.0-0' }} <small>/ 2100-2300 kcal</small></span>
+      </div>
+      <div class="macro-item protein">
+        <div class="macro-bar"><div class="macro-fill" [style.width.%]="getMacroPercent(totals.protein_g, 170)"></div></div>
+        <span class="macro-val">{{ totals.protein_g | number:'1.0-0' }} <small>/ 150-170g prot</small></span>
+      </div>
+      <div class="macro-item">
+        <div class="macro-bar"><div class="macro-fill" [style.width.%]="getMacroPercent(totals.carbs_g, 220)"></div></div>
+        <span class="macro-val">{{ totals.carbs_g | number:'1.0-0' }} <small>/ 180-220g carbs</small></span>
+      </div>
+      <div class="macro-item">
+        <div class="macro-bar"><div class="macro-fill" [style.width.%]="getMacroPercent(totals.fat_g, 70)"></div></div>
+        <span class="macro-val">{{ totals.fat_g | number:'1.0-0' }} <small>/ 60-70g grasa</small></span>
+      </div>
+    </div>
+  }
+
+  <!-- Protein Distribution -->
+  @if (proteinDist().length > 0) {
+    <section class="panel dist-panel">
+      <h2>Distribución Proteína <span class="info-tip" title="Óptimo: 25-55g por comida para máxima síntesis proteica muscular">ℹ️</span></h2>
+      <div class="dist-bars">
+        @for (item of proteinDist(); track item.meal_type) {
+          <div class="dist-row">
+            <span class="dist-label">{{ item.label }}</span>
+            <div class="dist-track"><div class="dist-fill" [class.optimal]="item.optimal" [class.low]="item.protein_g < 25" [style.width.%]="(item.protein_g / 55) * 100"></div></div>
+            <span class="dist-val" [class.optimal]="item.optimal">{{ item.protein_g }}g</span>
+          </div>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- Meal Form -->
+  @if (showForm()) {
+    <section class="panel form-panel">
+      <div class="form-header">
+        <h2>{{ editingMeal() ? 'Editar Comida' : 'Nueva Comida' }}</h2>
+        <button class="btn-close" (click)="showForm.set(false)">✕</button>
+      </div>
+      <form (ngSubmit)="saveMeal()">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>Tipo</label>
+            <select [(ngModel)]="mealForm.meal_type" name="type">
+              <option value="breakfast">🥣 Desayuno</option>
+              <option value="lunch">🥗 Almuerzo</option>
+              <option value="dinner">🍽️ Cena</option>
+              <option value="snack">🍎 Snack</option>
+              <option value="shake">🥤 Batido</option>
+            </select>
+          </div>
+          <div class="form-field wide">
+            <label>Descripción</label>
+            <input type="text" [(ngModel)]="mealForm.description" name="desc" placeholder="¿Qué comiste?">
+          </div>
+          <div class="form-field"><label>Calorías</label><input type="number" [(ngModel)]="mealForm.calories" name="cal"></div>
+          <div class="form-field"><label>Proteína (g)</label><input type="number" [(ngModel)]="mealForm.protein_g" name="prot"></div>
+          <div class="form-field"><label>Carbos (g)</label><input type="number" [(ngModel)]="mealForm.carbs_g" name="carbs"></div>
+          <div class="form-field"><label>Grasa (g)</label><input type="number" [(ngModel)]="mealForm.fat_g" name="fat"></div>
+        </div>
+        <button type="submit" class="btn-submit">{{ editingMeal() ? 'Actualizar' : 'Guardar' }}</button>
+      </form>
+    </section>
+  }
+
+  <!-- Meals List -->
+  <section class="panel meals-panel">
+    <h2>Comidas del día ({{ summary()?.meals?.length || 0 }})</h2>
+    @for (meal of summary()?.meals; track meal.id) {
+      <div class="meal-row">
+        <span class="meal-icon">{{ getMealIcon(meal.meal_type) }}</span>
+        <div class="meal-info">
+          <span class="meal-desc">{{ meal.description }}</span>
+          <span class="meal-type">{{ getMealLabel(meal.meal_type) }}</span>
+        </div>
+        <div class="meal-macros">
+          <span>{{ meal.calories }} kcal</span>
+          <span class="prot">{{ meal.protein_g }}P</span>
+          <span>{{ meal.carbs_g }}C</span>
+          <span>{{ meal.fat_g }}G</span>
+        </div>
+        <div class="meal-actions">
+          <button class="btn-icon" (click)="editMeal(meal)">✏️</button>
+          <button class="btn-icon danger" (click)="deleteMeal(meal.id)">🗑️</button>
+        </div>
+      </div>
+    }
+    @if (!summary()?.meals?.length) {
+      <p class="empty">Sin comidas registradas — usa el botón "+ Comida"</p>
+    }
+  </section>
+
+  <!-- Bottom: Streak + Supplements + Adherence -->
+  <div class="bottom-row">
+    <div class="panel mini">
+      <h3>🔥 Racha Proteína</h3>
+      @if (proteinStreak(); as s) {
+        <span class="streak-num">{{ s.current_streak }}</span>
+        <span class="streak-label">días ≥ {{ s.floor }}g</span>
+        <span class="streak-best">Récord: {{ s.longest_streak }}</span>
+      }
+    </div>
+    <div class="panel mini">
+      <h3>💊 Suplementos</h3>
+      <label class="supp-check" [class.done]="supplements()?.creatine" (click)="toggleSupplement('creatine')">
+        {{ supplements()?.creatine ? '✅' : '⬜' }} Creatina 5g
+      </label>
+      <label class="supp-check" [class.done]="supplements()?.protein_powder" (click)="toggleSupplement('protein_powder')">
+        {{ supplements()?.protein_powder ? '✅' : '⬜' }} Proteína en polvo
+      </label>
+    </div>
+    <div class="panel mini adherence-panel">
+      <h3>📅 Adherencia (4 semanas)</h3>
+      <div class="adh-grid">
+        @for (day of adherence(); track day.date) {
+          <div class="adh-cell" [class]="'adh-' + day.status" [title]="day.date"></div>
+        }
+      </div>
+      <div class="adh-legend">
+        <span><span class="dot green"></span>Cumplido</span>
+        <span><span class="dot yellow"></span>Parcial</span>
+        <span><span class="dot red"></span>Fallo</span>
+      </div>
+    </div>
+  </div>
+</div>

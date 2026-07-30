@@ -1,0 +1,46 @@
+<div class="settings-page">
+  <h1>⚙️ Configuración</h1>
+
+  @if (saved()) {
+    <div class="toast">✅ Guardado correctamente</div>
+  }
+
+  @if (settings()) {
+    <form (ngSubmit)="save()">
+      <section class="panel">
+        <h2>Datos Personales</h2>
+        <div class="form-grid">
+          <div class="form-field"><label>Altura (cm)</label><input type="number" step="0.1" [(ngModel)]="form.height_cm" name="height"></div>
+          <div class="form-field"><label>Peso Inicial (kg)</label><input type="number" step="0.1" [(ngModel)]="form.initial_weight_kg" name="initWeight"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Meta de Cintura</h2>
+        <div class="form-grid">
+          <div class="form-field"><label>Cintura Objetivo (cm)</label><input type="number" step="0.1" [(ngModel)]="form.waist_goal_cm" name="waistGoal"></div>
+          <div class="form-field"><label>Fecha Meta</label><input type="date" [(ngModel)]="form.goal_date" name="goalDate"></div>
+          <div class="form-field"><label>Baseline Cintura (cm)</label><input type="number" step="0.1" [(ngModel)]="form.baseline_waist_cm" name="baseline"></div>
+          <div class="form-field"><label>Fecha Baseline</label><input type="date" [(ngModel)]="form.baseline_date" name="baselineDate"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Metas de Macronutrientes</h2>
+        <div class="form-grid">
+          <div class="form-field"><label>Proteína Min (g)</label><input type="number" [(ngModel)]="form.protein_min_g" name="protMin"></div>
+          <div class="form-field"><label>Proteína Max (g)</label><input type="number" [(ngModel)]="form.protein_max_g" name="protMax"></div>
+          <div class="form-field"><label>Proteína Piso (g) <span class="info-tip" title="Mínimo diario no negociable. No se compensa entre días.">ℹ️</span></label><input type="number" [(ngModel)]="form.protein_floor_g" name="protFloor"></div>
+          <div class="form-field"><label>Calorías Min</label><input type="number" [(ngModel)]="form.calories_min" name="calMin"></div>
+          <div class="form-field"><label>Calorías Max</label><input type="number" [(ngModel)]="form.calories_max" name="calMax"></div>
+          <div class="form-field"><label>Carbos Min (g)</label><input type="number" [(ngModel)]="form.carbs_min_g" name="carbMin"></div>
+          <div class="form-field"><label>Carbos Max (g)</label><input type="number" [(ngModel)]="form.carbs_max_g" name="carbMax"></div>
+          <div class="form-field"><label>Grasa Min (g)</label><input type="number" [(ngModel)]="form.fat_min_g" name="fatMin"></div>
+          <div class="form-field"><label>Grasa Max (g)</label><input type="number" [(ngModel)]="form.fat_max_g" name="fatMax"></div>
+        </div>
+      </section>
+
+      <button type="submit" class="btn-save">Guardar Cambios</button>
+    </form>
+  }
+</div>

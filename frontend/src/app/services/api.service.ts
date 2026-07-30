@@ -127,4 +127,12 @@ export class ApiService {
       taken,
     });
   }
+
+  createGoal(goal: { metric: string; label: string; direction: string; target_value: number; baseline_value: number; start_date: string; target_date: string }): Observable<Goal> {
+    return this.http.post<Goal>(`${this.baseUrl}/goals`, goal);
+  }
+
+  updateSettings(settings: Partial<Settings>): Observable<Settings> {
+    return this.http.put<Settings>(`${this.baseUrl}/settings`, settings);
+  }
 }

@@ -1,0 +1,35 @@
+.settings-page {
+  max-width: 700px; display: flex; flex-direction: column; gap: 1rem;
+  h1 { margin: 0; font-size: 1.2rem; font-weight: 700; }
+}
+
+.toast {
+  position: fixed; top: 1rem; right: 1rem; padding: 0.6rem 1rem; background: var(--color-success);
+  color: white; border-radius: 8px; font-size: 0.8rem; font-weight: 600; z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+.panel {
+  background: var(--color-surface); border: 1px solid var(--color-border); border-radius: 12px; padding: 1rem 1.25rem;
+  h2 { margin: 0 0 0.75rem; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--color-text-secondary); }
+}
+
+.form-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+  @media (max-width: 600px) { grid-template-columns: repeat(2, 1fr); }
+}
+
+.form-field {
+  display: flex; flex-direction: column; gap: 0.15rem;
+  label { font-size: 0.6rem; font-weight: 600; text-transform: uppercase; color: var(--color-text-secondary); }
+  input { padding: 0.4rem 0.5rem; border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.85rem; }
+}
+
+.info-tip { cursor: help; font-size: 0.75rem; }
+
+.btn-save {
+  padding: 0.5rem 1.5rem; background: var(--color-primary); color: white; border: none;
+  border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; align-self: flex-start;
+  &:hover { opacity: 0.9; }
+}

@@ -1,0 +1,80 @@
+<div class="measurements-page">
+  <header class="page-header">
+    <h1>📏 Medidas Corporales</h1>
+    <div class="range-bar">
+      <button [class.active]="activeRange() === '1m'" (click)="setRange('1m')">1M</button>
+      <button [class.active]="activeRange() === '3m'" (click)="setRange('3m')">3M</button>
+      <button [class.active]="activeRange() === '6m'" (click)="setRange('6m')">6M</button>
+      <button [class.active]="activeRange() === '1y'" (click)="setRange('1y')">1A</button>
+      <button [class.active]="activeRange() === 'all'" (click)="setRange('all')">Todo</button>
+    </div>
+  </header>
+
+  <!-- Register Form -->
+  <section class="panel form-panel">
+    <h2>Registrar Medidas</h2>
+    <form class="measure-form" (ngSubmit)="saveMeasurement()">
+      <div class="form-grid">
+        <div class="form-field">
+          <label>Fecha</label>
+          <input type="date" [(ngModel)]="form.date" name="date">
+        </div>
+        <div class="form-field">
+          <label>Cintura (cm)</label>
+          <input type="number" step="0.1" [(ngModel)]="form.waist_cm" name="waist" placeholder="99.5">
+        </div>
+        <div class="form-field">
+          <label>Brazo D (cm)</label>
+          <input type="number" step="0.1" [(ngModel)]="form.arm_right_cm" name="armR" placeholder="35.5">
+        </div>
+        <div class="form-field">
+          <label>Brazo I (cm)</label>
+          <input type="number" step="0.1" [(ngModel)]="form.arm_left_cm" name="armL" placeholder="35.3">
+        </div>
+        <div class="form-field">
+          <label>Peso (kg)</label>
+          <input type="number" step="0.1" [(ngModel)]="form.weight_kg" name="weight" placeholder="84.2">
+        </div>
+        <button type="submit" class="btn-submit">Guardar</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Charts -->
+  <div class="charts-grid">
+    <section class="panel chart-panel">
+      <h3>Cintura</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="waistChartData()" [options]="lineOptions"></canvas></div>
+    </section>
+    <section class="panel chart-panel">
+      <h3>Brazos</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="armsChartData()" [options]="lineOptions"></canvas></div>
+    </section>
+    <section class="panel chart-panel">
+      <h3>Peso</h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="weightChartData()" [options]="lineOptions"></canvas></div>
+    </section>
+    <section class="panel chart-panel">
+      <h3>WHtR <span class="info-tip" title="Ratio cintura/estatura. Meta: < 0.50. Excelente: ≤ 0.46">ℹ️</span></h3>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="whtrChartData()" [options]="lineOptions"></canvas></div>
+    </section>
+  </div>
+
+  <!-- Indicators -->
+  <div class="indicators-row">
+    @if (deficitEfficiency(); as de) {
+      <div class="indicator">
+        <span class="ind-label">Eficiencia Déficit <span class="info-tip" title="cm de cintura perdidos por cada kg de peso. > 0.8 = excelente (pérdida visceral preferente)">ℹ️</span></span>
+        <span class="ind-value" [class]="de.rating">{{ de.ratio ?? '—' }} cm/kg</span>
+        <span class="ind-detail">Cintura: -{{ de.waist_lost_cm }}cm · Peso: -{{ de.weight_lost_kg }}kg</span>
+      </div>
+    }
+    @if (whtr(); as w) {
+      <div class="indicator">
+        <span class="ind-label">WHtR <span class="info-tip" title="Ratio cintura/estatura. ≤0.46 excelente, ≤0.53 saludable, ≤0.60 riesgo aumentado, >0.60 riesgo alto">ℹ️</span></span>
+        <span class="ind-value">{{ w.ratio }}</span>
+        <span class="ind-detail">{{ w.category === 'excelente' ? '🟢' : w.category === 'saludable' ? '🟡' : w.category === 'aumentado' ? '🟠' : '🔴' }} {{ w.category }}</span>
+      </div>
+    }
+  </div>
+</div>
