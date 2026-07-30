@@ -103,7 +103,7 @@ export class WeeklyComponent implements OnInit {
       this.waistChartData.set({
         labels,
         datasets: [
-          { label: 'Real', data: actual, borderColor: '#4F46E5', backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0.3, fill: true },
+          { label: 'Real', data: actual, borderColor: '#4F46E5', backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0, fill: true, pointRadius: 3 },
           { label: 'Meta', data: targetLine, borderColor: '#94A3B8', borderDash: [6, 4], pointRadius: 0 },
         ],
       });
@@ -115,8 +115,8 @@ export class WeeklyComponent implements OnInit {
         this.armsChartData.set({
           labels,
           datasets: [
-            { label: 'Derecho', data: armR.map((p) => p.value), borderColor: '#10B981', tension: 0.3 },
-            { label: 'Izquierdo', data: armL.map((p) => p.value), borderColor: '#F59E0B', tension: 0.3 },
+            { label: 'Derecho', data: armR.map((p) => p.value), borderColor: '#10B981', tension: 0, pointRadius: 3 },
+            { label: 'Izquierdo', data: armL.map((p) => p.value), borderColor: '#F59E0B', tension: 0, pointRadius: 3 },
           ],
         });
       });
@@ -126,7 +126,7 @@ export class WeeklyComponent implements OnInit {
       this.weightChartData.set({
         labels: history.map((p) => this.formatShortDate(p.date)),
         datasets: [
-          { label: 'Peso', data: history.map((p) => p.value), borderColor: '#6366F1', backgroundColor: 'rgba(99, 102, 241, 0.1)', tension: 0.3, fill: true },
+          { label: 'Peso', data: history.map((p) => p.value), borderColor: '#6366F1', backgroundColor: 'rgba(99, 102, 241, 0.1)', tension: 0, fill: true, pointRadius: 3 },
         ],
       });
     });

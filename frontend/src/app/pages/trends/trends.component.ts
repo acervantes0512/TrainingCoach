@@ -89,8 +89,8 @@ export class TrendsComponent implements OnInit {
         this.armsChartData.set({
           labels,
           datasets: [
-            { label: 'Brazo D', data: armR.map((p) => p.value), borderColor: '#10B981', tension: 0.3 },
-            { label: 'Brazo I', data: armL.map((p) => p.value), borderColor: '#F59E0B', tension: 0.3 },
+            { label: 'Brazo D', data: armR.map((p) => p.value), borderColor: '#10B981', tension: 0, pointRadius: 3 },
+            { label: 'Brazo I', data: armL.map((p) => p.value), borderColor: '#F59E0B', tension: 0, pointRadius: 3 },
           ],
         });
       });
@@ -234,7 +234,7 @@ export class TrendsComponent implements OnInit {
       labels: data.map((p) => this.formatLabel(p.date)),
       datasets: [{
         label, data: data.map((p) => p.value),
-        borderColor: color, backgroundColor: color + '1A', tension: 0.3, fill: true,
+        borderColor: color, backgroundColor: color + '1A', tension: 0, fill: true, pointRadius: 3,
       }],
     };
   }
