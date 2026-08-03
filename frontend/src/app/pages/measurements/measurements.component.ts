@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartConfiguration } from 'chart.js';
 import { ApiService } from '../../services/api.service';
+import { localToday } from '../../utils/date';
 import { Measurement, MeasurementInput, HistoryPoint, DeficitEfficiency, WaistToHeightRatio } from '../../models';
 
 type RangePreset = '1m' | '3m' | '6m' | '1y' | 'all';
@@ -23,7 +24,7 @@ export class MeasurementsComponent implements OnInit {
   editingId = signal<number | null>(null);
 
   form: MeasurementInput = {
-    date: new Date().toISOString().split('T')[0],
+    date: localToday(),
     waist_cm: 0,
     arm_right_cm: 0,
     arm_left_cm: 0,
@@ -60,7 +61,7 @@ export class MeasurementsComponent implements OnInit {
       this.loadCharts();
       this.loadIndicators();
       this.form = {
-        date: new Date().toISOString().split('T')[0],
+        date: localToday(),
         waist_cm: 0,
         arm_right_cm: 0,
         arm_left_cm: 0,
@@ -128,7 +129,7 @@ export class MeasurementsComponent implements OnInit {
   }
 
   private getDateRange(): { from: string; to: string } {
-    const to = new Date().toISOString().split('T')[0];
+    const to = localToday();
     const range = this.activeRange();
     if (range === 'all') return { from: '2020-01-01', to };
     if (range === '1m') return { from: this.subtractMonths(1), to };

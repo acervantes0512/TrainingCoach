@@ -2,6 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
+import { localToday } from '../../utils/date';
 import { DailySummary, Meal, MealInput, MealType, ProteinStreak, ProteinDistribution, SupplementStatus, AdherenceDay } from '../../models';
 
 @Component({
@@ -14,7 +15,7 @@ import { DailySummary, Meal, MealInput, MealType, ProteinStreak, ProteinDistribu
 export class NutritionComponent implements OnInit {
   private api = inject(ApiService);
 
-  currentDate = signal(new Date().toISOString().split('T')[0]);
+  currentDate = signal(localToday());
   summary = signal<DailySummary | null>(null);
   proteinStreak = signal<ProteinStreak | null>(null);
   proteinDist = signal<ProteinDistribution[]>([]);
