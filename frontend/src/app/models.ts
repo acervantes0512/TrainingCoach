@@ -225,4 +225,12 @@ export interface GoalProgress {
   on_track: boolean;
   history: GoalProgressPoint[];
   ideal_line: { date: string; value: number }[];
+  weekly_averages: WeeklyGoalPoint[];
+}
+
+export interface WeeklyGoalPoint {
+  week_start: string;
+  actual_avg: number;
+  ideal_avg: number;
+  days_count: number;
 }

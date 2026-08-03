@@ -77,6 +77,14 @@
         <p class="empty">Sin datos aún</p>
       }
 
+      <!-- Weekly Averages Chart -->
+      @if (config.gp.weekly_averages.length > 0) {
+        <div class="weekly-section">
+          <h4>Promedio Semanal <span class="info-tip" title="Los promedios semanales eliminan fluctuaciones diarias por retención de líquidos, sodio, etc. Es la métrica más confiable de progreso real.">ℹ️</span></h4>
+          <div class="weekly-chart"><canvas baseChart [type]="'bar'" [data]="config.weeklyData" [options]="config.weeklyOptions"></canvas></div>
+        </div>
+      }
+
       <div class="goal-dates">
         <span>{{ config.gp.goal.start_date }}</span>
         <span>→</span>

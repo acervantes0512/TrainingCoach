@@ -331,5 +331,18 @@ export function createMcpServer(): McpServer {
     }
   );
 
+  server.tool(
+    'get_weekly_measurement_averages',
+    'Get weekly averages for all body measurements (waist, arms, weight) over a date range. Weekly averages smooth out daily fluctuations from water retention, sodium, etc. This is the most reliable way to track real progress.',
+    {
+      from_date: z.string().describe('Start date YYYY-MM-DD'),
+      to_date: z.string().describe('End date YYYY-MM-DD'),
+    },
+    async ({ from_date, to_date }) => {
+      const averages = await MeasurementService.getWeeklyAverages(from_date, to_date);
+      return { content: [{ type: 'text' as const, text: JSON.stringify(averages) }] };
+    }
+  );
+
   return server;
 }

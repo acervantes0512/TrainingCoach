@@ -14,6 +14,13 @@ export interface Goal {
   created_at: string;
 }
 
+export interface WeeklyGoalPoint {
+  week_start: string;
+  actual_avg: number;
+  ideal_avg: number;
+  days_count: number;
+}
+
 export interface GoalProgress {
   goal: Goal;
   current_value: number | null;
@@ -23,6 +30,7 @@ export interface GoalProgress {
   on_track: boolean;
   history: { date: string; actual: number; ideal: number }[];
   ideal_line: { date: string; value: number }[];
+  weekly_averages: WeeklyGoalPoint[];
 }
 
 export interface GoalInput {
@@ -156,7 +164,7 @@ export async function getProgress(id: number): Promise<GoalProgress | null> {
     idealLine.push({ date: goal.target_date, value: goal.target_value });
   }
 
-  return {
+  const result = {
     goal,
     current_value: currentValue,
     percent_complete: percentComplete,
@@ -165,6 +173,25 @@ export async function getProgress(id: number): Promise<GoalProgress | null> {
     on_track: onTrack,
     history,
     ideal_line: idealLine,
+    weekly_averages: [] as WeeklyGoalPoint[],
+  };
+
+  const weeklyAverages = await MeasurementService.getWeeklyAverages(goal.start_date, goal.target_date);
+  const weeklyGoalPoints: WeeklyGoalPoint[] = weeklyAverages.map((wa) => {
+    const wDate = new Date(wa.week_start + 'T12:00:00');
+    const wDays = (wDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000);
+    const idealAvg = goal.baseline_value + ((goal.target_value - goal.baseline_value) * wDays / totalDays);
+    return {
+      week_start: wa.week_start,
+      actual_avg: (wa as unknown as Record<string, number>)[column],
+      ideal_avg: Math.round(idealAvg * 100) / 100,
+      days_count: wa.days_count,
+    };
+  });
+
+  return {
+    ...result,
+    weekly_averages: weeklyGoalPoints,
   };
 }
 

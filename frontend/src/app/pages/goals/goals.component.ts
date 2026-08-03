@@ -25,7 +25,7 @@ export class GoalsComponent implements OnInit {
 
   newGoal = { metric: 'waist_cm', label: '', direction: 'decrease' as 'decrease' | 'increase' | 'maintain', target_value: 0, baseline_value: 0, start_date: '', target_date: '' };
 
-  chartConfigs = signal<{ gp: GoalProgress; data: ChartConfiguration<'line'>['data']; options: ChartConfiguration<'line'>['options'] }[]>([]);
+  chartConfigs = signal<{ gp: GoalProgress; data: ChartConfiguration<'line'>['data']; options: ChartConfiguration<'line'>['options']; weeklyData: ChartConfiguration<'bar'>['data']; weeklyOptions: ChartConfiguration<'bar'>['options'] }[]>([]);
 
   ngOnInit(): void {
     this.loadGoals();
@@ -104,7 +104,25 @@ export class GoalsComponent implements OnInit {
         plugins: { legend: { position: 'bottom' }, zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
         scales: { y: { title: { display: true, text: gp.goal.metric.includes('cm') ? 'cm' : 'kg' } } },
       };
-      return { gp, data, options };
+
+      const weeklyLabels = gp.weekly_averages.map((w) => {
+        const d = new Date(w.week_start + 'T12:00:00');
+        return `Sem ${d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`;
+      });
+      const weeklyData: ChartConfiguration<'bar'>['data'] = {
+        labels: weeklyLabels,
+        datasets: [
+          { label: 'Promedio Real', data: gp.weekly_averages.map((w) => w.actual_avg), backgroundColor: '#4F46E5' },
+          { label: 'Promedio Ideal', data: gp.weekly_averages.map((w) => w.ideal_avg), backgroundColor: '#CBD5E1' },
+        ],
+      };
+      const weeklyOptions: ChartConfiguration<'bar'>['options'] = {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.raw} ${gp.goal.metric.includes('cm') ? 'cm' : 'kg'}` } } },
+        scales: { y: { title: { display: true, text: gp.goal.metric.includes('cm') ? 'cm' : 'kg' } } },
+      };
+
+      return { gp, data, options, weeklyData, weeklyOptions };
     });
     this.chartConfigs.set(configs);
   }

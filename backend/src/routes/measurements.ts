@@ -22,4 +22,10 @@ router.post('/', async (req: Request, res: Response) => {
   res.status(201).json(measurement);
 });
 
+router.get('/weekly-averages/range', async (req: Request, res: Response) => {
+  const { from, to } = req.query;
+  if (!from || !to) { res.status(400).json({ error: 'from and to required' }); return; }
+  res.json(await MeasurementService.getWeeklyAverages(from as string, to as string));
+});
+
 export default router;
