@@ -95,7 +95,12 @@
         <section class="panel chart-section">
           <h2>Promedios Semanales — Real vs Ideal <span class="info-tip" title="Los promedios semanales eliminan fluctuaciones por retención de líquidos, sodio, estrés. Es la métrica más confiable.">ℹ️</span></h2>
           @if (gp.weekly_averages.length > 0) {
-            <div class="chart-wrap"><canvas baseChart [type]="'bar'" [data]="weeklyChartData()" [options]="weeklyChartOptions()"></canvas></div>
+            <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="weeklyLineData()" [options]="weeklyLineOptions()"></canvas></div>
+            <p class="chart-hint">Scroll para zoom · Arrastra para mover</p>
+
+            <h2 style="margin-top: 1.5rem">Comparativa por Semana</h2>
+            <div class="chart-wrap-sm"><canvas baseChart [type]="'bar'" [data]="weeklyChartData()" [options]="weeklyChartOptions()"></canvas></div>
+
             <div class="weekly-table">
               <table>
                 <thead><tr><th>Semana</th><th>Prom. Real</th><th>Prom. Ideal</th><th>Δ</th><th>Días</th></tr></thead>

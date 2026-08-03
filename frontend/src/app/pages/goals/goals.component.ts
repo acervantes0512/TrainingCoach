@@ -40,6 +40,8 @@ export class GoalsComponent implements OnInit {
   dailyChartOptions = computed(() => this.buildDailyOptions(this.selectedGoal()));
   weeklyChartData = computed(() => this.buildWeeklyChart(this.selectedGoal()));
   weeklyChartOptions = computed(() => this.buildWeeklyOptions(this.selectedGoal()));
+  weeklyLineData = computed(() => this.buildWeeklyLineChart(this.selectedGoal()));
+  weeklyLineOptions = computed(() => this.buildDailyOptions(this.selectedGoal()));
 
   ngOnInit(): void {
     this.loadGoals();
@@ -166,6 +168,18 @@ export class GoalsComponent implements OnInit {
       datasets: [
         { label: 'Promedio Real', data: gp.weekly_averages.map((w) => w.actual_avg), backgroundColor: '#4F46E5', borderRadius: 4 },
         { label: 'Promedio Ideal', data: gp.weekly_averages.map((w) => w.ideal_avg), backgroundColor: '#E2E8F0', borderRadius: 4 },
+      ],
+    };
+  }
+
+  private buildWeeklyLineChart(gp: GoalProgress | null): ChartConfiguration<'line'>['data'] {
+    if (!gp || !gp.weekly_averages.length) return { labels: [], datasets: [] };
+    const labels = gp.weekly_averages.map((w) => `Sem ${new Date(w.week_start + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`);
+    return {
+      labels,
+      datasets: [
+        { label: 'Prom. Real', data: gp.weekly_averages.map((w) => w.actual_avg), borderColor: '#4F46E5', backgroundColor: 'rgba(79,70,229,0.08)', tension: 0, fill: true, pointRadius: 5, borderWidth: 2.5, pointHoverRadius: 7 },
+        { label: 'Prom. Ideal', data: gp.weekly_averages.map((w) => w.ideal_avg), borderColor: '#94A3B8', borderDash: [6, 4], pointRadius: 0, tension: 0, borderWidth: 1.5 },
       ],
     };
   }
