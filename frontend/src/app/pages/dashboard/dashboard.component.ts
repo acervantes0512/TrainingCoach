@@ -34,9 +34,12 @@ export class DashboardComponent implements OnInit {
   sparkOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false }, tooltip: { enabled: true } },
-    scales: { x: { display: false }, y: { display: false } },
-    elements: { point: { radius: 2 } },
+    plugins: { legend: { display: false }, tooltip: { enabled: true, callbacks: { label: (ctx) => `${ctx.raw}` } } },
+    scales: {
+      x: { display: true, ticks: { font: { size: 9 }, maxRotation: 0 } },
+      y: { display: true, ticks: { font: { size: 9 } } },
+    },
+    elements: { point: { radius: 3, hoverRadius: 6 } },
   };
 
   ngOnInit(): void {
@@ -64,10 +67,10 @@ export class DashboardComponent implements OnInit {
     const from = localDateString(threeWeeksAgo);
 
     this.api.getHistory('waist', from, this.today).subscribe((data) => {
-      this.waistSparkData.set(this.buildSpark(data.map((p) => p.value), '#4F46E5'));
+      this.waistSparkData.set(this.buildSpark(data, '#4F46E5'));
     });
     this.api.getHistory('weight', from, this.today).subscribe((data) => {
-      this.weightSparkData.set(this.buildSpark(data.map((p) => p.value), '#6366F1'));
+      this.weightSparkData.set(this.buildSpark(data, '#6366F1'));
     });
   }
 
@@ -107,10 +110,14 @@ export class DashboardComponent implements OnInit {
     return labels[w.category] || w.category;
   }
 
-  private buildSpark(values: number[], color: string): ChartConfiguration<'line'>['data'] {
+  private buildSpark(data: { date: string; value: number }[], color: string): ChartConfiguration<'line'>['data'] {
+    const labels = data.map((p) => {
+      const d = new Date(p.date + 'T12:00:00');
+      return d.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+    });
     return {
-      labels: values.map((_, i) => String(i)),
-      datasets: [{ data: values, borderColor: color, backgroundColor: color + '14', fill: true, tension: 0, borderWidth: 2, pointRadius: 2 }],
+      labels,
+      datasets: [{ data: data.map((p) => p.value), borderColor: color, backgroundColor: color + '14', fill: true, tension: 0, borderWidth: 2, pointRadius: 3 }],
     };
   }
 
