@@ -139,15 +139,26 @@
     </div>
   </div>
 
-  <!-- Row 4: Sparklines -->
+  <!-- Row 4: Charts -->
   <div class="grid-2col">
-    <section class="panel spark-panel">
-      <h2>Cintura — últimas 3 semanas</h2>
-      <div class="spark-chart"><canvas baseChart [type]="'line'" [data]="waistSparkData()" [options]="sparkOptions"></canvas></div>
+    <section class="panel chart-panel">
+      <h2>Cintura — Diario (3 semanas)</h2>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="waistSparkData()" [options]="sparkOptions"></canvas></div>
     </section>
-    <section class="panel spark-panel">
-      <h2>Peso — últimas 3 semanas</h2>
-      <div class="spark-chart"><canvas baseChart [type]="'line'" [data]="weightSparkData()" [options]="sparkOptions"></canvas></div>
+    <section class="panel chart-panel">
+      <h2>Peso — Diario (3 semanas)</h2>
+      <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="weightSparkData()" [options]="sparkOptions"></canvas></div>
+    </section>
+  </div>
+
+  <div class="grid-2col">
+    <section class="panel chart-panel">
+      <h2>Cintura — Promedio Semanal <span class="info-tip" title="El promedio semanal elimina fluctuaciones diarias por agua, sodio y estrés. Es tu progreso REAL.">ℹ️</span></h2>
+      <div class="chart-wrap"><canvas baseChart [type]="'bar'" [data]="waistWeeklyData()" [options]="barOptions"></canvas></div>
+    </section>
+    <section class="panel chart-panel">
+      <h2>Peso — Promedio Semanal <span class="info-tip" title="Peso promedio semanal. Las variaciones diarias de ±1kg son normales (agua, comida en tránsito).">ℹ️</span></h2>
+      <div class="chart-wrap"><canvas baseChart [type]="'bar'" [data]="weightWeeklyData()" [options]="barOptions"></canvas></div>
     </section>
   </div>
 

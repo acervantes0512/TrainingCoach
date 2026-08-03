@@ -135,4 +135,10 @@ export class ApiService {
   updateSettings(settings: Partial<Settings>): Observable<Settings> {
     return this.http.put<Settings>(`${this.baseUrl}/settings`, settings);
   }
+
+  getWeeklyAverages(from: string, to: string): Observable<{ week_start: string; waist_cm: number; arm_right_cm: number; arm_left_cm: number; weight_kg: number; days_count: number }[]> {
+    return this.http.get<{ week_start: string; waist_cm: number; arm_right_cm: number; arm_left_cm: number; weight_kg: number; days_count: number }[]>(
+      `${this.baseUrl}/measurements/weekly-averages/range`, { params: { from, to } }
+    );
+  }
 }

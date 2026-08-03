@@ -31,6 +31,8 @@ export class DashboardComponent implements OnInit {
 
   waistSparkData = signal<ChartConfiguration<'line'>['data']>({ labels: [], datasets: [] });
   weightSparkData = signal<ChartConfiguration<'line'>['data']>({ labels: [], datasets: [] });
+  waistWeeklyData = signal<ChartConfiguration<'bar'>['data']>({ labels: [], datasets: [] });
+  weightWeeklyData = signal<ChartConfiguration<'bar'>['data']>({ labels: [], datasets: [] });
   sparkOptions: ChartConfiguration<'line'>['options'] = {
     responsive: true,
     maintainAspectRatio: false,
@@ -40,6 +42,15 @@ export class DashboardComponent implements OnInit {
       y: { display: true, ticks: { font: { size: 9 } } },
     },
     elements: { point: { radius: 3, hoverRadius: 6 } },
+  };
+  barOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { enabled: true } },
+    scales: {
+      x: { ticks: { font: { size: 9 } } },
+      y: { ticks: { font: { size: 9 } } },
+    },
   };
 
   ngOnInit(): void {
@@ -71,6 +82,21 @@ export class DashboardComponent implements OnInit {
     });
     this.api.getHistory('weight', from, this.today).subscribe((data) => {
       this.weightSparkData.set(this.buildSpark(data, '#6366F1'));
+    });
+
+    const eightWeeksAgo = new Date();
+    eightWeeksAgo.setDate(eightWeeksAgo.getDate() - 56);
+    const weeklyFrom = localDateString(eightWeeksAgo);
+    this.api.getWeeklyAverages(weeklyFrom, this.today).subscribe((weeks) => {
+      const labels = weeks.map((w) => `Sem ${new Date(w.week_start + 'T12:00:00').toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}`);
+      this.waistWeeklyData.set({
+        labels,
+        datasets: [{ label: 'Cintura', data: weeks.map((w) => w.waist_cm), backgroundColor: '#4F46E5', borderRadius: 3 }],
+      });
+      this.weightWeeklyData.set({
+        labels,
+        datasets: [{ label: 'Peso', data: weeks.map((w) => w.weight_kg), backgroundColor: '#6366F1', borderRadius: 3 }],
+      });
     });
   }
 
