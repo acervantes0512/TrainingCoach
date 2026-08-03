@@ -1,4 +1,5 @@
 <div class="goals-page">
+  <!-- Header -->
   <header class="page-header">
     <h1>🎯 Mis Metas</h1>
     <button class="btn-add" (click)="showForm.set(!showForm())">{{ showForm() ? '✕ Cancelar' : '+ Nueva Meta' }}</button>
@@ -10,8 +11,7 @@
       <h2>Crear Meta</h2>
       <form (ngSubmit)="createGoal()">
         <div class="form-grid">
-          <div class="form-field">
-            <label>Métrica</label>
+          <div class="form-field"><label>Métrica</label>
             <select [(ngModel)]="newGoal.metric" name="metric">
               <option value="waist_cm">Cintura (cm)</option>
               <option value="weight_kg">Peso (kg)</option>
@@ -19,18 +19,14 @@
               <option value="arm_left_cm">Brazo Izquierdo (cm)</option>
             </select>
           </div>
-          <div class="form-field">
-            <label>Dirección</label>
+          <div class="form-field"><label>Dirección</label>
             <select [(ngModel)]="newGoal.direction" name="direction">
               <option value="decrease">↓ Reducir</option>
               <option value="increase">↑ Aumentar</option>
               <option value="maintain">↔ Mantener</option>
             </select>
           </div>
-          <div class="form-field wide">
-            <label>Nombre de la meta</label>
-            <input type="text" [(ngModel)]="newGoal.label" name="label" placeholder="Ej: Reducir cintura a 90cm">
-          </div>
+          <div class="form-field wide"><label>Nombre</label><input type="text" [(ngModel)]="newGoal.label" name="label" placeholder="Ej: Reducir cintura a 90cm"></div>
           <div class="form-field"><label>Valor Inicial</label><input type="number" step="0.1" [(ngModel)]="newGoal.baseline_value" name="baseline"></div>
           <div class="form-field"><label>Valor Meta</label><input type="number" step="0.1" [(ngModel)]="newGoal.target_value" name="target"></div>
           <div class="form-field"><label>Fecha Inicio</label><input type="date" [(ngModel)]="newGoal.start_date" name="startDate"></div>
@@ -41,77 +37,133 @@
     </section>
   }
 
-  <!-- Active Goals -->
-  @for (config of chartConfigs(); track config.gp.goal.id) {
-    <section class="panel goal-panel">
-      <div class="goal-top">
-        <div class="goal-info">
-          <h3>{{ config.gp.goal.label }}</h3>
-          <div class="goal-tags">
-            <span class="tag">{{ getMetricLabel(config.gp.goal.metric) }}</span>
-            <span class="tag">{{ getDirectionLabel(config.gp.goal.direction) }}</span>
-          </div>
+  @if (allGoals().length > 0) {
+    <!-- Controls: Goal Selector + View Mode -->
+    <div class="controls-bar">
+      <div class="goal-tabs">
+        @for (gp of allGoals(); track gp.goal.id) {
+          <button class="goal-tab" [class.active]="selectedGoalId() === gp.goal.id || (selectedGoalId() === null && gp === allGoals()[0])" (click)="selectGoal(gp.goal.id)">
+            {{ getMetricLabel(gp.goal.metric) }}
+          </button>
+        }
+      </div>
+      <div class="view-tabs">
+        <button [class.active]="viewMode() === 'daily'" (click)="setView('daily')">📈 Diario</button>
+        <button [class.active]="viewMode() === 'weekly'" (click)="setView('weekly')">📊 Semanal</button>
+        <button [class.active]="viewMode() === 'summary'" (click)="setView('summary')">📋 Resumen</button>
+      </div>
+    </div>
+
+    <!-- Selected Goal Info Bar -->
+    @if (selectedGoal(); as gp) {
+      <div class="goal-info-bar">
+        <div class="gib-title">
+          <h3>{{ gp.goal.label }}</h3>
+          <span class="gib-tag">{{ getDirectionLabel(gp.goal.direction) }}</span>
         </div>
-        <div class="goal-metrics">
-          <div class="gm"><span class="gm-val">{{ config.gp.goal.baseline_value }}</span><span class="gm-lbl">Inicio</span></div>
-          <div class="gm"><span class="gm-val current" [class.on-track]="config.gp.on_track" [class.off-track]="!config.gp.on_track">{{ config.gp.current_value ?? '—' }}</span><span class="gm-lbl">Actual</span></div>
-          <div class="gm"><span class="gm-val">{{ config.gp.goal.target_value }}</span><span class="gm-lbl">Meta</span></div>
-          <div class="gm"><span class="gm-val" [class.on-track]="config.gp.on_track">{{ config.gp.percent_complete }}%</span><span class="gm-lbl">Progreso</span></div>
+        <div class="gib-stats">
+          <div class="gib-stat"><span class="gib-val">{{ gp.goal.baseline_value }}</span><span class="gib-lbl">Inicio</span></div>
+          <div class="gib-stat"><span class="gib-val current" [class.on-track]="gp.on_track" [class.off-track]="!gp.on_track">{{ gp.current_value ?? '—' }}</span><span class="gib-lbl">Actual</span></div>
+          <div class="gib-stat"><span class="gib-val">{{ gp.goal.target_value }}</span><span class="gib-lbl">Meta</span></div>
+          <div class="gib-stat"><span class="gib-val" [class.on-track]="gp.on_track">{{ gp.percent_complete }}%</span><span class="gib-lbl">Progreso</span></div>
+          <div class="gib-stat"><span class="gib-val">{{ getWeeksLeft(gp) }}</span><span class="gib-lbl">Sem. restantes</span></div>
         </div>
       </div>
 
       <!-- Progress bar -->
-      <div class="goal-bar"><div class="goal-bar-fill" [class.on-track]="config.gp.on_track" [class.off-track]="!config.gp.on_track" [style.width.%]="config.gp.percent_complete"></div></div>
+      <div class="goal-bar"><div class="goal-bar-fill" [class.on-track]="gp.on_track" [class.off-track]="!gp.on_track" [style.width.%]="gp.percent_complete"></div></div>
 
-      <!-- Status + Prediction -->
-      <div class="goal-status-row">
-        <span class="gs-diff" [class.on-track]="config.gp.on_track" [class.off-track]="!config.gp.on_track">{{ getDiffText(config.gp) }}</span>
-        <span class="gs-prediction">{{ getPrediction(config.gp) }}</span>
+      <!-- Status row -->
+      <div class="status-row">
+        <span class="sr-item" [class.on-track]="gp.on_track" [class.off-track]="!gp.on_track">{{ getDiffText(gp) }}</span>
+        <span class="sr-item">Ritmo: <strong>{{ getWeeklyRate(gp) }}</strong></span>
+        <span class="sr-item">Necesario: <strong>{{ getNeededRate(gp) }}</strong></span>
+        <span class="sr-item">Proyección: <strong>{{ getPrediction(gp) }}</strong></span>
       </div>
 
-      <!-- Chart -->
-      @if (config.gp.history.length > 0) {
-        <div class="goal-chart"><canvas baseChart [type]="'line'" [data]="config.data" [options]="config.options"></canvas></div>
-        <p class="chart-hint">Scroll para zoom · Arrastra para mover</p>
-      } @else {
-        <p class="empty">Sin datos aún</p>
+      <!-- DAILY VIEW -->
+      @if (viewMode() === 'daily') {
+        <section class="panel chart-section">
+          <h2>Progreso Diario — Real vs Ideal</h2>
+          <div class="chart-wrap"><canvas baseChart [type]="'line'" [data]="dailyChartData()" [options]="dailyChartOptions()"></canvas></div>
+          <p class="chart-hint">Scroll para zoom · Arrastra para mover</p>
+        </section>
       }
 
-      <!-- Weekly Averages Chart -->
-      @if (config.gp.weekly_averages.length > 0) {
-        <div class="weekly-section">
-          <h4>Promedio Semanal <span class="info-tip" title="Los promedios semanales eliminan fluctuaciones diarias por retención de líquidos, sodio, etc. Es la métrica más confiable de progreso real.">ℹ️</span></h4>
-          <div class="weekly-chart"><canvas baseChart [type]="'bar'" [data]="config.weeklyData" [options]="config.weeklyOptions"></canvas></div>
+      <!-- WEEKLY VIEW -->
+      @if (viewMode() === 'weekly') {
+        <section class="panel chart-section">
+          <h2>Promedios Semanales — Real vs Ideal <span class="info-tip" title="Los promedios semanales eliminan fluctuaciones por retención de líquidos, sodio, estrés. Es la métrica más confiable.">ℹ️</span></h2>
+          @if (gp.weekly_averages.length > 0) {
+            <div class="chart-wrap"><canvas baseChart [type]="'bar'" [data]="weeklyChartData()" [options]="weeklyChartOptions()"></canvas></div>
+            <div class="weekly-table">
+              <table>
+                <thead><tr><th>Semana</th><th>Prom. Real</th><th>Prom. Ideal</th><th>Δ</th><th>Días</th></tr></thead>
+                <tbody>
+                  @for (w of gp.weekly_averages; track w.week_start) {
+                    <tr>
+                      <td>{{ w.week_start }}</td>
+                      <td><strong>{{ w.actual_avg }}</strong></td>
+                      <td>{{ w.ideal_avg }}</td>
+                      <td [class.on-track]="(gp.goal.direction === 'decrease' && w.actual_avg <= w.ideal_avg) || (gp.goal.direction === 'increase' && w.actual_avg >= w.ideal_avg)" [class.off-track]="(gp.goal.direction === 'decrease' && w.actual_avg > w.ideal_avg) || (gp.goal.direction === 'increase' && w.actual_avg < w.ideal_avg)">
+                        {{ (w.actual_avg - w.ideal_avg) > 0 ? '+' : '' }}{{ (w.actual_avg - w.ideal_avg) | number:'1.2-2' }}
+                      </td>
+                      <td>{{ w.days_count }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="empty">Necesitas al menos 1 semana de datos</p>
+          }
+        </section>
+      }
+
+      <!-- SUMMARY VIEW -->
+      @if (viewMode() === 'summary') {
+        <div class="summary-grid">
+          @for (gp of allGoals(); track gp.goal.id) {
+            <div class="summary-card" [class.on-track]="gp.on_track" [class.off-track]="!gp.on_track">
+              <h4>{{ gp.goal.label }}</h4>
+              <div class="sc-gauge">
+                <svg viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="var(--color-border)" stroke-width="8"/>
+                  <circle cx="50" cy="50" r="42" fill="none" [attr.stroke]="gp.on_track ? 'var(--color-success)' : 'var(--color-danger)'" stroke-width="8"
+                          stroke-dasharray="264" [attr.stroke-dashoffset]="264 - (264 * gp.percent_complete / 100)"
+                          stroke-linecap="round" transform="rotate(-90 50 50)"/>
+                </svg>
+                <span class="sc-pct">{{ gp.percent_complete }}%</span>
+              </div>
+              <div class="sc-details">
+                <span>{{ gp.goal.baseline_value }} → {{ gp.current_value ?? '—' }} → {{ gp.goal.target_value }} {{ getUnit(gp.goal.metric) }}</span>
+                <span class="sc-rate">Ritmo: {{ getWeeklyRate(gp) }}</span>
+                <span class="sc-pred">{{ getPrediction(gp) }}</span>
+              </div>
+            </div>
+          }
         </div>
-      }
 
-      <div class="goal-dates">
-        <span>{{ config.gp.goal.start_date }}</span>
-        <span>→</span>
-        <span>{{ config.gp.goal.target_date }}</span>
-      </div>
-    </section>
-  }
-
-  @if (!chartConfigs().length && !showForm()) {
-    <div class="empty-state">
-      <p>No hay metas activas. Crea tu primera meta para empezar a trackear tu progreso.</p>
-    </div>
-  }
-
-  <!-- Milestones -->
-  @if (milestones().length > 0) {
-    <section class="panel milestones-panel">
-      <h2>🏆 Hitos de Cintura</h2>
-      <div class="milestones-row">
-        @for (m of milestones(); track m.value) {
-          <div class="milestone" [class.reached]="m.reached">
-            <span class="ms-icon">{{ m.reached ? '🏆' : '⚪' }}</span>
-            <span class="ms-val">&lt; {{ m.value }}cm</span>
-            @if (m.date_reached) { <span class="ms-date">{{ m.date_reached }}</span> }
-          </div>
+        <!-- Milestones -->
+        @if (milestones().length > 0) {
+          <section class="panel milestones-section">
+            <h2>🏆 Hitos de Cintura</h2>
+            <div class="milestones-row">
+              @for (m of milestones(); track m.value) {
+                <div class="milestone" [class.reached]="m.reached">
+                  <span class="ms-icon">{{ m.reached ? '🏆' : '⚪' }}</span>
+                  <span class="ms-val">&lt; {{ m.value }}cm</span>
+                  @if (m.date_reached) { <span class="ms-date">{{ m.date_reached }}</span> }
+                </div>
+              }
+            </div>
+          </section>
         }
-      </div>
-    </section>
+      }
+    }
+  } @else if (!showForm()) {
+    <div class="empty-state">
+      <p>No hay metas activas. Crea tu primera meta para empezar a trackear.</p>
+    </div>
   }
 </div>
