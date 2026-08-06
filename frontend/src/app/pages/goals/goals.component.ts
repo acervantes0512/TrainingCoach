@@ -153,11 +153,27 @@ export class GoalsComponent implements OnInit {
   }
 
   private buildDailyOptions(gp: GoalProgress | null): ChartConfiguration<'line'>['options'] {
+    const unit = gp ? this.getUnit(gp.goal.metric) : '';
     return {
       responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: { legend: { position: 'bottom' }, zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } } },
-      scales: { y: { title: { display: true, text: gp ? this.getUnit(gp.goal.metric) : '' } } },
+      interaction: { mode: 'index', intersect: false, axis: 'x' },
+      hover: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: (ctx) => {
+              const val = ctx.raw as number | null;
+              if (val === null) return '';
+              return `${ctx.dataset.label}: ${val} ${unit}`;
+            },
+          },
+        },
+        zoom: { zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }, pan: { enabled: true, mode: 'x' } },
+      },
+      scales: { y: { title: { display: true, text: unit } } },
     };
   }
 
